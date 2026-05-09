@@ -19,7 +19,13 @@ import {
   History,
   Clock,
   ArrowLeft,
-  Brain
+  Brain,
+  ShieldCheck,
+  Zap,
+  Globe,
+  Cpu,
+  Terminal,
+  Server
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -36,59 +42,24 @@ import { LEADS, ACTIVITY } from '../../data/mockData';
 import styles from './Dashboard.module.css';
 
 const CHART_DATA = [
-  { name: 'Mon', calls: 400, followups: 240 },
-  { name: 'Tue', calls: 300, followups: 139 },
-  { name: 'Wed', calls: 600, followups: 980 },
-  { name: 'Thu', calls: 800, followups: 390 },
-  { name: 'Fri', calls: 500, followups: 480 },
-  { name: 'Sat', calls: 900, followups: 380 },
-  { name: 'Sun', calls: 700, followups: 430 },
+  { name: '00:00', calls: 400, followups: 240 },
+  { name: '04:00', calls: 300, followups: 139 },
+  { name: '08:00', calls: 600, followups: 980 },
+  { name: '12:00', calls: 800, followups: 390 },
+  { name: '16:00', calls: 500, followups: 480 },
+  { name: '20:00', calls: 900, followups: 380 },
+  { name: '23:59', calls: 700, followups: 430 },
 ];
 
-const KpiCard = ({ label, value, trend, trendUp }) => (
-  <div className={`${styles.kpiCard} glass-panel`}>
-    <span className={styles.kpiLabel}>{label}</span>
-    <div className={styles.kpiMain}>
-      <span className={styles.kpiValue}>{value}</span>
-      <span className={`${styles.kpiTrend} ${trendUp ? styles.trendUp : styles.trendDown}`}>
-        {trendUp ? <ArrowUpRight size={14} /> : null} {trend}
-      </span>
+const TelemetryNode = ({ label, value, subValue, icon: Icon }) => (
+  <div className={`${styles.tacticalPanel} ${styles.kpiCard}`}>
+    <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '10px'}}>
+      <Icon size={14} color="#8b5cf6" />
+      <span style={{fontSize: '0.5rem', opacity: 0.5}}>DATA_STREAMS_ACTIVE</span>
     </div>
-  </div>
-);
-
-const LeadsTable = ({ filteredLeads, onSelectLead }) => (
-  <div className={`${styles.tableCard} glass-panel`} style={{ width: '100%', marginTop: '20px' }}>
-    <table className={styles.table}>
-      <thead>
-        <tr>
-          <th>Lead</th>
-          <th>Phone</th>
-          <th>Status</th>
-          <th>AI Summary</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {filteredLeads.map(lead => (
-          <tr key={lead.id}>
-            <td><span className={styles.leadName}>{lead.name}</span></td>
-            <td><span className={styles.leadPhone}>{lead.phone}</span></td>
-            <td>
-              <span className={`${styles.statusBadge} ${styles[lead.status]}`}>
-                {lead.status}
-              </span>
-            </td>
-            <td><div className={styles.leadSummary}>{lead.summary}</div></td>
-            <td>
-              <button className={styles.viewBtn} onClick={() => onSelectLead(lead)}>
-                <Eye size={16} /> View
-              </button>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <span className={styles.kpiLabel}>{label}</span>
+    <div className={styles.kpiValue}>{value}</div>
+    <div style={{fontSize: '0.6rem', color: '#10B981', marginTop: '4px'}}>{subValue}</div>
   </div>
 );
 
@@ -104,433 +75,255 @@ const Dashboard = ({ onBackToLanding }) => {
     );
   }, [searchTerm]);
 
-  const renderContent = () => {
-    if (selectedLead) {
-      return (
-        <div className={`${styles.fullView} fade-in`}>
-          <button className={styles.backBtn} onClick={() => setSelectedLead(null)}>
-            <ArrowLeft size={18} /> Back to leads
-          </button>
-          <div className={styles.leadDetailGrid}>
-            <div className={`${styles.detailMain} glass-panel`}>
-              <div className={styles.detailHeader}>
-                <div>
-                  <h2>{selectedLead.name}</h2>
-                  <p>{selectedLead.phone}</p>
-                </div>
-                <span className={`${styles.statusBadge} ${styles[selectedLead.status]}`}>
-                  {selectedLead.status}
-                </span>
-              </div>
-              <div className={styles.detailSection}>
-                <h3><Brain size={18} /> AI Call Summary</h3>
-                <p className={styles.aiFullText}>{selectedLead.summary}</p>
-              </div>
-              <div className={styles.detailSection}>
-                <h3><History size={18} /> Interaction Timeline</h3>
-                <div className={styles.timeline}>
-                  <div className={styles.timelineItem}>
-                    <div className={styles.timelinePoint}></div>
-                    <div className={styles.timelineContent}>
-                      <p>Call Logged</p>
-                      <span>{selectedLead.lastCall}</span>
-                    </div>
-                  </div>
-                  <div className={styles.timelineItem}>
-                    <div className={styles.timelinePoint} style={{background: '#25D366'}}></div>
-                    <div className={styles.timelineContent}>
-                      <p>WhatsApp Follow-up Sent</p>
-                      <span>Just after call</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className={`${styles.detailSidebar} glass-panel`}>
-              <h3>Quick Actions</h3>
-              <button className={styles.actionBtn}>Mark as Converted</button>
-              <button className={styles.actionBtn}>Schedule Follow-up</button>
-              <button className={styles.actionBtnSecondary}>Re-run AI Analysis</button>
-            </div>
+  const renderOverview = () => (
+    <>
+      {/* Column 1: Core Telemetry */}
+      <div className={styles.leftColumn}>
+        <TelemetryNode label="DATABASE_NODES" value="12,402" subValue="SYNC_STABLE" icon={Server} />
+        <TelemetryNode label="ACTIVE_SESIONS" value="142" subValue="+12%_PEAK" icon={Activity} />
+        <TelemetryNode label="AI_CORES_ACTIVE" value="138" subValue="THREAD_SAFE" icon={Brain} />
+        <div className={styles.tacticalPanel} style={{flex: 1, padding: '16px'}}>
+          <span className={styles.kpiLabel}>SYSTEM_LOG_DUMP</span>
+          <div style={{fontSize: '0.6rem', color: '#64748b', fontFamily: 'var(--font-mono)', lineHeight: '1.4'}}>
+            {`> kernel: boot secure
+> auth: jwt_valid
+> node_04: online
+> ai_engine: ready
+> socket: connected
+> buffer: clear
+> cluster: healthy`}
           </div>
         </div>
-      );
-    }
+      </div>
 
-    switch (activeTab) {
-      case 'Leads':
-        return (
-          <div className={`${styles.fullView} fade-in`}>
-            <div className={styles.viewHeader}>
-              <h2>Lead Management</h2>
-              <button className={styles.addBtn}><Plus size={14} /> New Lead</button>
-            </div>
-            <div className={`${styles.tableCard} glass-panel`} style={{ width: '100%', marginTop: '20px' }}>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Lead</th>
-                    <th>Phone</th>
-                    <th>Status</th>
-                    <th>AI Summary</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredLeads.map(lead => (
-                    <tr key={lead.id}>
-                      <td><span className={styles.leadName}>{lead.name}</span></td>
-                      <td><span className={styles.leadPhone}>{lead.phone}</span></td>
-                      <td>
-                        <span className={`${styles.statusBadge} ${styles[lead.status]}`}>
-                          {lead.status}
-                        </span>
-                      </td>
-                      <td><div className={styles.leadSummary}>{lead.summary}</div></td>
-                      <td>
-                        <button className={styles.viewBtn} onClick={() => setSelectedLead(lead)}>
-                          <Eye size={16} /> View
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+      {/* Column 2: Operations Map & Primary Data */}
+      <div className={styles.centerColumn}>
+        <div className={`${styles.tacticalPanel} ${styles.chartCard}`}>
+          <div className={styles.cardHeader}>
+            <h3>NEURAL_ACTIVITY_MATRIX</h3>
+            <div style={{display: 'flex', gap: '10px'}}>
+              <div style={{width: '6px', height: '6px', borderRadius: '50%', background: '#8b5cf6'}}></div>
+              <div style={{width: '6px', height: '6px', borderRadius: '50%', background: '#ec4899'}}></div>
             </div>
           </div>
-        );
-      case 'Docs':
-        return (
-          <div className={`${styles.fullView} fade-in`}>
-            <div className={styles.viewHeader}>
-              <h2>API Documentation</h2>
+          <ResponsiveContainer width="100%" height="90%">
+            <AreaChart data={CHART_DATA}>
+              <defs>
+                <linearGradient id="glowViolet" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4}/>
+                  <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="2 2" stroke="rgba(139, 92, 246, 0.1)" vertical={false} />
+              <XAxis dataKey="name" hide />
+              <YAxis hide />
+              <Tooltip contentStyle={{background: '#010103', border: '1px solid #8b5cf6', fontSize: '10px'}} />
+              <Area type="stepAfter" dataKey="calls" stroke="#8b5cf6" fill="url(#glowViolet)" strokeWidth={2} />
+              <Area type="monotone" dataKey="followups" stroke="#ec4899" fill="transparent" strokeWidth={1} strokeDasharray="5 5" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className={`${styles.tacticalPanel} ${styles.tableCard}`}>
+          <div className={styles.cardHeader}>
+            <h3>DATA_SET_RECORDS</h3>
+            <div className={styles.searchBar}>
+              <Search size={12} />
+              <input type="text" placeholder="FILTER_RECORDS..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
             </div>
-            <div className={styles.docsGrid}>
-              <div className={`${styles.docCard} glass-panel`}>
-                <div className={styles.docEndpoint}><code>POST</code> /api/calls</div>
-                <p>Log a new call interaction for AI processing.</p>
-                <pre className={styles.docCode}>
+          </div>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>ENITY_NAME</th>
+                <th>STATUS_FLAG</th>
+                <th>TRACE</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredLeads.slice(0, 5).map(lead => (
+                <tr key={lead.id} style={{cursor: 'pointer'}} onClick={() => setSelectedLead(lead)}>
+                  <td style={{color: '#8b5cf6', fontSize: '0.6rem'}}>#{lead.id}</td>
+                  <td style={{color: '#fff', fontWeight: 600}}>{lead.name}</td>
+                  <td>
+                    <span className={`${styles.statusBadge} ${styles[lead.status]}`}>
+                      {lead.status}
+                    </span>
+                  </td>
+                  <td><ArrowUpRight size={12} opacity={0.3} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Column 3: Pulse & Interactions */}
+      <div className={styles.rightColumn}>
+        <div className={`${styles.tacticalPanel} ${styles.activityCard}`}>
+          <div className={styles.cardHeader}>
+            <h3>REAL_TIME_PULSE</h3>
+            <div style={{fontSize: '0.5rem', color: '#10B981'}}>● LIVE_SYNC</div>
+          </div>
+          <div className={styles.activityList}>
+            {ACTIVITY.map(item => (
+              <div key={item.id} className={styles.activityItem}>
+                <div className={styles.activityDot}></div>
+                <div className={styles.activityContent}>
+                  <p style={{fontSize: '0.7rem', color: '#fff'}}>{item.msg.toUpperCase()}</p>
+                  <span style={{fontSize: '0.55rem', opacity: 0.4}}>{item.time} // TRACE_OK</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className={styles.tacticalPanel} style={{height: '150px', background: 'repeating-linear-gradient(45deg, rgba(139, 92, 246, 0.02) 0px, rgba(139, 92, 246, 0.02) 2px, transparent 2px, transparent 4px)'}}>
+          <div style={{padding: '20px', textAlign: 'center'}}>
+            <Cpu size={32} color="#8b5cf6" opacity={0.2} style={{animation: 'dataPulse 2s infinite'}} />
+            <div style={{fontSize: '0.6rem', letterSpacing: '0.2em', marginTop: '10px'}}>SECURITY_KERNEL_V4</div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+
+  const renderLeads = () => (
+    <div className={styles.fullView}>
+      <div className={styles.cardHeader}>
+        <h2 style={{fontSize: '1rem', letterSpacing: '0.1em', color: 'white'}}>LEAD_INVENTORY_ROOT</h2>
+        <button style={{background: '#8b5cf6', padding: '8px 16px', borderRadius: '8px', border: 'none', color: 'white', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: '0.7rem'}}><Plus size={14} /> ADD_ENTRY</button>
+      </div>
+      <div className={styles.tacticalPanel} style={{padding: '24px'}}>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th>IDENTIFIER</th>
+              <th>CONTACT_DATA</th>
+              <th>STATUS</th>
+              <th>AI_SUMMARY_HASH</th>
+              <th>ACTION</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredLeads.map(lead => (
+              <tr key={lead.id}>
+                <td style={{color: '#8b5cf6'}}>#{lead.id}</td>
+                <td style={{color: '#fff'}}>{lead.name}<br/><span style={{fontSize: '0.65rem', opacity: 0.5}}>{lead.phone}</span></td>
+                <td>
+                  <span className={`${styles.statusBadge} ${styles[lead.status]}`}>
+                    {lead.status}
+                  </span>
+                </td>
+                <td><div style={{maxWidth: '400px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', opacity: 0.6, fontSize: '0.7rem'}}>{lead.summary}</div></td>
+                <td>
+                  <button style={{background: 'transparent', border: '1px solid rgba(139,92,246,0.3)', padding: '6px 12px', borderRadius: '4px', color: '#8b5cf6', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.6rem'}} onClick={() => setSelectedLead(lead)}>
+                    <Eye size={12} /> OPEN
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const renderDocs = () => (
+    <div className={styles.fullView}>
+      <h2 style={{color: 'white', marginBottom: '30px'}}>API_INTERFACE_SPECIFICATIONS</h2>
+      <div className={styles.leadDetailGrid}>
+        <div className={styles.tacticalPanel} style={{padding: '30px'}}>
+           <div style={{color: '#10B981', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', marginBottom: '10px'}}>POST /v1/dispatch/calls</div>
+           <p style={{fontSize: '0.8rem', marginBottom: '20px'}}>Initialize a new neural call session and queue for AI summarization.</p>
+           <pre style={{background: '#000', padding: '20px', borderRadius: '8px', border: '1px solid #1a1a2e', fontSize: '0.7rem'}}>
 {`{
-  "caller_id": "+15550102",
-  "audio_url": "s3://...",
-  "meta": { "campaign": "Q2_Sales" }
+  "caller": "+1-555-0102",
+  "priority": "high",
+  "stream_url": "wss://pulse.io/live"
 }`}
-                </pre>
-              </div>
-              <div className={`${styles.docCard} glass-panel`}>
-                <div className={styles.docEndpoint}><code>GET</code> /api/leads/:id</div>
-                <p>Retrieve full lead intelligence and history.</p>
-                <pre className={styles.docCode}>
-{`{
-  "id": "lead_9283",
-  "status": "contacted",
-  "sentiment": "positive"
-}`}
-                </pre>
-              </div>
-            </div>
-          </div>
-        );
-      case 'Observability':
-        return (
-          <div className={`${styles.fullView} fade-in`}>
-            <div className={styles.viewHeader}>
-              <h2>System Observability</h2>
-            </div>
-            <div className={styles.obsGrid}>
-              <div className={`${styles.obsCard} glass-panel`}>
-                <h3>Worker Latency</h3>
-                <div className={styles.obsValue}>312ms</div>
-                <div className={styles.obsTrend}>Good</div>
-              </div>
-              <div className={`${styles.obsCard} glass-panel`}>
-                <h3>Error Rate</h3>
-                <div className={styles.obsValue} style={{color: '#EF4444'}}>0.02%</div>
-                <div className={styles.obsTrend}>Stable</div>
-              </div>
-              <div className={`${styles.obsCard} glass-panel`}>
-                <h3>Job Queue Depth</h3>
-                <div className={styles.obsValue}>12</div>
-                <div className={styles.obsTrend}>Active</div>
-              </div>
-              <div className={`${styles.obsChart} glass-panel`}>
-                <h3>Requests per minute</h3>
-                <ResponsiveContainer width="100%" height={200}>
-                  <LineChart data={CHART_DATA}>
-                    <Line type="stepAfter" dataKey="calls" stroke="var(--violet)" strokeWidth={2} dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </div>
-        );
-      case 'Calls':
-        return (
-          <div className={`${styles.fullView} fade-in`}>
-            <div className={styles.viewHeader}>
-              <h2>Call Intelligence Logs</h2>
-            </div>
-            <div className={`${styles.tableCard} glass-panel`}>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Call ID</th>
-                    <th>Caller</th>
-                    <th>Duration</th>
-                    <th>AI Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[1, 2, 3, 4, 5].map(i => (
-                    <tr key={i}>
-                      <td><code style={{color: 'var(--violet)'}}>#CAL-092{i}</code></td>
-                      <td>+1 555-019{i}</td>
-                      <td>{2 + i}m {10 * i}s</td>
-                      <td><span className={styles.statusBadge} style={{background: 'rgba(139, 92, 246, 0.1)', color: 'var(--violet)'}}>Summarized</span></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        );
-      case 'WhatsApp':
-        return (
-          <div className={`${styles.fullView} fade-in`}>
-            <div className={styles.viewHeader}>
-              <h2>WhatsApp Automation Logs</h2>
-            </div>
-            <div className={`${styles.activityCard} glass-panel`}>
-              <div className={styles.activityList}>
-                {ACTIVITY.filter(a => a.msg.toLowerCase().includes('whatsapp') || a.msg.toLowerCase().includes('follow-up')).map(item => (
-                  <div key={item.id} className={styles.activityItem}>
-                    <div className={styles.activityDot} style={{background: '#25D366', boxShadow: '0 0 10px #25D366'}}></div>
-                    <div className={styles.activityContent}>
-                      <p>{item.msg}</p>
-                      <span>{item.time}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        );
-      case 'Analytics':
-        return (
-          <div className={`${styles.fullView} fade-in`}>
-            <div className={styles.viewHeader}>
-              <h2>System Analytics</h2>
-            </div>
-            <div className={styles.bentoGrid}>
-              <div className={`${styles.chartCard} glass-panel`} style={{gridColumn: 'span 2'}}>
-                <div className={styles.cardHeader}><h3>API Response Times (ms)</h3></div>
-                <div className={styles.chartWrapper}>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <LineChart data={CHART_DATA}>
-                      <XAxis dataKey="name" hide />
-                      <Tooltip />
-                      <Line type="monotone" dataKey="calls" stroke="var(--cyan)" strokeWidth={3} dot={false} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-              <div className={`${styles.kpiCard} glass-panel`}>
-                <span className={styles.kpiLabel}>Uptime</span>
-                <div className={styles.kpiValue}>99.99%</div>
-              </div>
-              <div className={`${styles.kpiCard} glass-panel`}>
-                <span className={styles.kpiLabel}>Avg Latency</span>
-                <div className={styles.kpiValue}>312ms</div>
-              </div>
-            </div>
-          </div>
-        );
-      default:
-        return (
-          <div className={styles.bentoGrid}>
-            <div className={`${styles.chartCard} glass-panel`}>
-              <div className={styles.cardHeader}>
-                <h3>Lead Growth & Activity</h3>
-                <div className={styles.chartLegend}>
-                  <span className={styles.legendItem}><span className={styles.dotViolet}></span> Calls</span>
-                  <span className={styles.legendItem}><span className={styles.dotPink}></span> Follow-ups</span>
-                </div>
-              </div>
-              <div className={styles.chartWrapper}>
-                <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={CHART_DATA}>
-                    <defs>
-                      <linearGradient id="colorCalls" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="var(--violet)" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="var(--violet)" stopOpacity={0}/>
-                      </linearGradient>
-                      <linearGradient id="colorFollowups" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="var(--pink)" stopOpacity={0.2}/>
-                        <stop offset="95%" stopColor="var(--pink)" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                    <XAxis dataKey="name" stroke="var(--text-dim)" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis stroke="var(--text-dim)" fontSize={12} tickLine={false} axisLine={false} />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: 'var(--bg-surface-solid)', borderColor: 'var(--border-glass)', borderRadius: '12px' }}
-                      itemStyle={{ fontSize: '12px' }}
-                    />
-                    <Area type="monotone" dataKey="calls" stroke="var(--violet)" fillOpacity={1} fill="url(#colorCalls)" strokeWidth={3} />
-                    <Area type="monotone" dataKey="followups" stroke="var(--pink)" fillOpacity={1} fill="url(#colorFollowups)" strokeWidth={3} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-            
-            <div className={`${styles.tableCard} glass-panel`}>
-              <div className={styles.cardHeader}>
-                <h3>Recent Leads</h3>
-                <div className={styles.tableActions}>
-                  <button className={styles.filterBtn} onClick={() => setActiveTab('Leads')}><Filter size={14} /> View All</button>
-                </div>
-              </div>
-              <div className={styles.tableWrapper}>
-                <table className={styles.table}>
-                  <thead>
-                    <tr>
-                      <th>Lead</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredLeads.slice(0, 4).map(lead => (
-                      <tr key={lead.id}>
-                        <td>
-                          <div className={styles.leadInfo}>
-                            <span className={styles.leadName}>{lead.name}</span>
-                            <span className={styles.leadPhone}>{lead.phone}</span>
-                          </div>
-                        </td>
-                        <td>
-                          <span className={`${styles.statusBadge} ${styles[lead.status]}`}>
-                            {lead.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            
-            <div className={`${styles.activityCard} glass-panel`}>
-              <div className={styles.cardHeader}>
-                <h3>Live Activity</h3>
-                <Activity size={18} color="var(--violet)" />
-              </div>
-              <div className={styles.activityList}>
-                {ACTIVITY.map(item => (
-                  <div key={item.id} className={styles.activityItem}>
-                    <div className={styles.activityDot}></div>
-                    <div className={styles.activityContent}>
-                      <p>{item.msg}</p>
-                      <span>{item.time}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        );
-    }
-  };
+           </pre>
+        </div>
+        <div className={styles.tacticalPanel} style={{padding: '30px'}}>
+          <h3 style={{fontSize: '0.7rem', marginBottom: '20px'}}>AUTHENTICATION</h3>
+          <p style={{fontSize: '0.7rem', opacity: 0.6}}>All requests must include a Bearer JWT in the authorization header.</p>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className={styles.container}>
-      <aside className={styles.sidebar}>
-        <div className={styles.sidebarBrand} onClick={onBackToLanding}>
-          <div className={styles.logoMark}>
-            <div className={styles.logoInner}></div>
-          </div>
-          <span>LeadPulse</span>
-        </div>
-        
-        <nav className={styles.sidebarNav}>
-          <button 
-            className={`${styles.navItem} ${activeTab === 'Overview' && !selectedLead ? styles.active : ''}`} 
-            onClick={() => {setActiveTab('Overview'); setSelectedLead(null);}}
-          >
-            <LayoutDashboard size={20} /> <span>Overview</span>
-          </button>
-          <button 
-            className={`${styles.navItem} ${activeTab === 'Leads' || selectedLead ? styles.active : ''}`} 
-            onClick={() => {setActiveTab('Leads'); setSelectedLead(null);}}
-          >
-            <Users size={20} /> <span>Leads</span>
-          </button>
-          <button 
-            className={`${styles.navItem} ${activeTab === 'Calls' ? styles.active : ''}`} 
-            onClick={() => {setActiveTab('Calls'); setSelectedLead(null);}}
-          >
-            <PhoneCall size={20} /> <span>Calls</span>
-          </button>
-          <button 
-            className={`${styles.navItem} ${activeTab === 'WhatsApp' ? styles.active : ''}`} 
-            onClick={() => {setActiveTab('WhatsApp'); setSelectedLead(null);}}
-          >
-            <MessageCircle size={20} /> <span>WhatsApp</span>
-          </button>
-          <button 
-            className={`${styles.navItem} ${activeTab === 'Docs' ? styles.active : ''}`} 
-            onClick={() => {setActiveTab('Docs'); setSelectedLead(null);}}
-          >
-            <BookOpen size={20} /> <span>API Docs</span>
-          </button>
-          <button 
-            className={`${styles.navItem} ${activeTab === 'Observability' ? styles.active : ''}`} 
-            onClick={() => {setActiveTab('Observability'); setSelectedLead(null);}}
-          >
-            <Eye size={20} /> <span>Observability</span>
-          </button>
-        </nav>
-        
-        <div className={styles.sidebarFooter}>
-          <button className={styles.navItem}>
-            <Settings size={20} /> <span>Settings</span>
-          </button>
-          <button className={styles.navItem} onClick={onBackToLanding}>
-            <LogOut size={20} /> <span>Sign Out</span>
-          </button>
-        </div>
-      </aside>
+      <div className={styles.nebula}></div>
+      <div className={styles.gridOverlay}></div>
+
+      <nav className={styles.commandDock}>
+        <button 
+          className={`${styles.navItem} ${activeTab === 'Overview' && !selectedLead ? styles.active : ''}`} 
+          onClick={() => {setActiveTab('Overview'); setSelectedLead(null);}}
+          title="Telemetry Overview"
+        >
+          <LayoutDashboard size={20} />
+        </button>
+        <button 
+          className={`${styles.navItem} ${activeTab === 'Leads' || selectedLead ? styles.active : ''}`} 
+          onClick={() => {setActiveTab('Leads'); setSelectedLead(null);}}
+          title="Data Inventory"
+        >
+          <Users size={20} />
+        </button>
+        <button 
+          className={`${styles.navItem} ${activeTab === 'Docs' ? styles.active : ''}`} 
+          onClick={() => {setActiveTab('Docs'); setSelectedLead(null);}}
+          title="Interface Spec"
+        >
+          <BookOpen size={20} />
+        </button>
+        <div style={{width: '1px', background: 'rgba(255,255,255,0.1)', height: '24px', margin: '0 4px'}}></div>
+        <button className={styles.navItem} onClick={onBackToLanding} title="Terminate Session">
+          <LogOut size={20} color="#EF4444" />
+        </button>
+      </nav>
       
       <main className={styles.mainContent}>
         <header className={styles.header}>
           <div className={styles.headerLeft}>
-            <h1>{selectedLead ? 'Lead Detail' : activeTab}</h1>
-            <p>{selectedLead ? `Analysis for ${selectedLead.name}` : 'Managing your LeadPulse environment.'}</p>
+            <h1>SYSTEM_TERMINAL::LEADPULSE_OS</h1>
+            <p style={{fontSize: '0.6rem', color: '#64748b'}}>NODE: 04 // STATUS: SECURE // {activeTab.toUpperCase()}</p>
           </div>
-          <div className={styles.headerActions}>
-            <div className={styles.searchBar}>
-              <Search size={18} />
-              <input 
-                type="text" 
-                placeholder="Search leads..." 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <button className={styles.iconBtn} aria-label="Notifications"><Bell size={20} /></button>
-            <div className={styles.userAvatar}>JD</div>
+          <div style={{display: 'flex', gap: '20px', alignItems: 'center'}}>
+            <div style={{fontFamily: 'var(--font-mono)', fontSize: '0.6rem', color: '#8b5cf6'}}>AUTH::SESSION_ACTIVE</div>
+            <div style={{width: '32px', height: '32px', borderRadius: '50%', background: '#8b5cf6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 'bold', color: '#fff'}}>JD</div>
           </div>
         </header>
         
-        {activeTab === 'Overview' && !selectedLead && (
-          <div className={styles.kpiRow}>
-            <KpiCard label="Total Leads" value="12,402" trend="+12.5%" trendUp={true} />
-            <KpiCard label="Calls Today" value="142" trend="+5.2%" trendUp={true} />
-            <KpiCard label="Follow-ups" value="138" trend="+98%" trendUp={true} />
-            <KpiCard label="Latency" value="340ms" trend="Stable" trendUp={true} />
+        {selectedLead ? (
+          <div className={styles.fullView}>
+            <button className={styles.backBtn} onClick={() => setSelectedLead(null)}>
+              <ArrowLeft size={12} /> RETURN_TO_CLUSTER
+            </button>
+            <div className={styles.leadDetailGrid}>
+              <div className={styles.tacticalPanel} style={{padding: '40px'}}>
+                <h2 style={{color: '#fff', fontSize: '2rem', marginBottom: '10px'}}>{selectedLead.name}</h2>
+                <p style={{color: '#8b5cf6', fontSize: '0.7rem', marginBottom: '30px'}}>{selectedLead.phone} // ENCRYPTED_LINK</p>
+                <div className={styles.aiFullText}>{selectedLead.summary}</div>
+              </div>
+              <div className={styles.tacticalPanel} style={{padding: '30px'}}>
+                <h3 style={{fontSize: '0.7rem', letterSpacing: '0.1em', marginBottom: '20px'}}>SESSION_ACTIONS</h3>
+                <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                   <button style={{background: '#8b5cf6', color: '#fff', border: 'none', padding: '12px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 'bold', cursor: 'pointer'}}>COMMIT_CONVERSION</button>
+                   <button style={{background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', padding: '12px', borderRadius: '4px', fontSize: '0.7rem', cursor: 'pointer'}}>SCHEDULE_TASK</button>
+                </div>
+              </div>
+            </div>
           </div>
+        ) : (
+          <>
+            {activeTab === 'Overview' && renderOverview()}
+            {activeTab === 'Leads' && renderLeads()}
+            {activeTab === 'Docs' && renderDocs()}
+          </>
         )}
-        
-        {renderContent()}
       </main>
     </div>
   );
