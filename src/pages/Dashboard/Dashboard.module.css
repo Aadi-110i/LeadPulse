@@ -334,25 +334,214 @@
 .new { background: rgba(148, 163, 184, 0.1); color: #94A3B8; }
 .failed { background: rgba(239, 68, 68, 0.1); color: #EF4444; }
 
-.fullView {
-  width: 100%;
+/* Lead Detail View */
+.backBtn {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-bottom: 24px;
+  transition: var(--transition-smooth);
 }
 
-.viewHeader {
+.backBtn:hover {
+  color: var(--violet);
+}
+
+.leadDetailGrid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+
+.detailMain {
+  padding: 40px;
+}
+
+.detailHeader {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 40px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid var(--border-glass);
+}
+
+.detailSection {
+  margin-bottom: 40px;
+}
+
+.detailSection h3 {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  display: flex;
   align-items: center;
-  margin-bottom: 30px;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 
-.viewHeader h2 {
-  font-size: 1.5rem;
+.aiFullText {
+  background: rgba(139, 92, 246, 0.05);
+  border: 1px solid var(--border-glass);
+  padding: 24px;
+  border-radius: 16px;
+  font-size: 1.1rem;
+  color: var(--text-bright);
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding-left: 20px;
+  border-left: 1px solid var(--border-glass);
+}
+
+.timelineItem {
+  position: relative;
+  padding-left: 20px;
+}
+
+.timelinePoint {
+  position: absolute;
+  left: -24px;
+  top: 6px;
+  width: 8px;
+  height: 8px;
+  background: var(--violet);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--violet);
+}
+
+.timelineContent p {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.timelineContent span {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.detailSidebar {
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.actionBtn {
+  background: var(--violet);
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.actionBtnSecondary {
+  background: transparent;
+  border: 1px solid var(--border-glass);
+  color: var(--text-bright);
+  padding: 14px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Docs View */
+.docsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.docCard {
+  padding: 30px;
+}
+
+.docEndpoint {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.docEndpoint code {
+  background: var(--violet);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.docCode {
+  background: #08081A;
+  padding: 20px;
+  border-radius: 12px;
+  margin-top: 20px;
+  font-family: 'JetBrains Mono', monospace;
+  color: #C4B5FD;
+  font-size: 0.9rem;
+}
+
+/* Observability View */
+.obsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: auto auto;
+  gap: 24px;
+}
+
+.obsCard {
+  padding: 30px;
+  text-align: center;
+}
+
+.obsValue {
+  font-size: 2.5rem;
   font-family: var(--font-heading);
+  color: var(--violet);
+  margin: 10px 0;
 }
 
-.tableWrapper {
-  margin-top: 10px;
-  overflow-x: auto;
+.obsTrend {
+  font-size: 0.8rem;
+  color: #10B981;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.obsChart {
+  grid-column: span 3;
+  padding: 30px;
+}
+
+/* View Buttons */
+.viewBtn {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-glass);
+  color: var(--text-bright);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.viewBtn:hover {
+  border-color: var(--violet);
+  background: rgba(139, 92, 246, 0.1);
 }
 
 .filterBtn, .addBtn {

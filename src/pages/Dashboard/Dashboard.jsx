@@ -1,4 +1,3 @@
-import React, { useState, useMemo } from 'react';
 import { 
   LayoutDashboard, 
   Users, 
@@ -13,7 +12,13 @@ import {
   Filter,
   LogOut,
   ChevronRight,
-  Settings
+  Settings,
+  BookOpen,
+  Eye,
+  History,
+  Clock,
+  ArrowLeft,
+  Brain
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -39,44 +44,6 @@ const CHART_DATA = [
   { name: 'Sun', calls: 700, followups: 430 },
 ];
 
-const Sidebar = ({ onBackToLanding }) => (
-  <aside className={styles.sidebar}>
-    <div className={styles.sidebarBrand} onClick={onBackToLanding}>
-      <div className={styles.logoMark}>
-        <div className={styles.logoInner}></div>
-      </div>
-      <span>LeadPulse</span>
-    </div>
-    
-    <nav className={styles.sidebarNav}>
-      <button className={`${styles.navItem} ${styles.active}`} aria-label="Overview">
-        <LayoutDashboard size={20} /> <span>Overview</span>
-      </button>
-      <button className={styles.navItem} aria-label="Leads">
-        <Users size={20} /> <span>Leads</span>
-      </button>
-      <button className={styles.navItem} aria-label="Calls">
-        <PhoneCall size={20} /> <span>Calls</span>
-      </button>
-      <button className={styles.navItem} aria-label="WhatsApp Logs">
-        <MessageCircle size={20} /> <span>WhatsApp</span>
-      </button>
-      <button className={styles.navItem} aria-label="Observability">
-        <Activity size={20} /> <span>Analytics</span>
-      </button>
-    </nav>
-    
-    <div className={styles.sidebarFooter}>
-      <button className={styles.navItem} aria-label="Settings">
-        <Settings size={20} /> <span>Settings</span>
-      </button>
-      <button className={styles.navItem} onClick={onBackToLanding} aria-label="Logout">
-        <LogOut size={20} /> <span>Sign Out</span>
-      </button>
-    </div>
-  </aside>
-);
-
 const KpiCard = ({ label, value, trend, trendUp }) => (
   <div className={`${styles.kpiCard} glass-panel`}>
     <span className={styles.kpiLabel}>{label}</span>
@@ -89,38 +56,10 @@ const KpiCard = ({ label, value, trend, trendUp }) => (
   </div>
 );
 
-const LeadsTable = ({ filteredLeads }) => (
-  <div className={`${styles.tableCard} glass-panel`} style={{ width: '100%', marginTop: '20px' }}>
-    <table className={styles.table}>
-      <thead>
-        <tr>
-          <th>Lead</th>
-          <th>Phone</th>
-          <th>Status</th>
-          <th>AI Summary</th>
-        </tr>
-      </thead>
-      <tbody>
-        {filteredLeads.map(lead => (
-          <tr key={lead.id}>
-            <td><span className={styles.leadName}>{lead.name}</span></td>
-            <td><span className={styles.leadPhone}>{lead.phone}</span></td>
-            <td>
-              <span className={`${styles.statusBadge} ${styles[lead.status]}`}>
-                {lead.status}
-              </span>
-            </td>
-            <td><div className={styles.leadSummary} style={{ maxWidth: '400px', overflow: 'visible', whiteSpace: 'normal' }}>{lead.summary}</div></td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-);
-
 const Dashboard = ({ onBackToLanding }) => {
   const [activeTab, setActiveTab] = useState('Overview');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedLead, setSelectedLead] = useState(null);
   
   const filteredLeads = useMemo(() => {
     return LEADS.filter(lead => 
@@ -130,6 +69,58 @@ const Dashboard = ({ onBackToLanding }) => {
   }, [searchTerm]);
 
   const renderContent = () => {
+    if (selectedLead) {
+      return (
+        <div className={`${styles.fullView} fade-in`}>
+          <button className={styles.backBtn} onClick={() => setSelectedLead(null)}>
+            <ArrowLeft size={18} /> Back to leads
+          </button>
+          <div className={styles.leadDetailGrid}>
+            <div className={`${styles.detailMain} glass-panel`}>
+              <div className={styles.detailHeader}>
+                <div>
+                  <h2>{selectedLead.name}</h2>
+                  <p>{selectedLead.phone}</p>
+                </div>
+                <span className={`${styles.statusBadge} ${styles[selectedLead.status]}`}>
+                  {selectedLead.status}
+                </span>
+              </div>
+              <div className={styles.detailSection}>
+                <h3><Brain size={18} /> AI Call Summary</h3>
+                <p className={styles.aiFullText}>{selectedLead.summary}</p>
+              </div>
+              <div className={styles.detailSection}>
+                <h3><History size={18} /> Interaction Timeline</h3>
+                <div className={styles.timeline}>
+                  <div className={styles.timelineItem}>
+                    <div className={styles.timelinePoint}></div>
+                    <div className={styles.timelineContent}>
+                      <p>Call Logged</p>
+                      <span>{selectedLead.lastCall}</span>
+                    </div>
+                  </div>
+                  <div className={styles.timelineItem}>
+                    <div className={styles.timelinePoint} style={{background: '#25D366'}}></div>
+                    <div className={styles.timelineContent}>
+                      <p>WhatsApp Follow-up Sent</p>
+                      <span>Just after call</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className={`${styles.detailSidebar} glass-panel`}>
+              <h3>Quick Actions</h3>
+              <button className={styles.actionBtn}>Mark as Converted</button>
+              <button className={styles.actionBtn}>Schedule Follow-up</button>
+              <button className={styles.actionBtnSecondary}>Re-run AI Analysis</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     switch (activeTab) {
       case 'Leads':
         return (
@@ -138,7 +129,103 @@ const Dashboard = ({ onBackToLanding }) => {
               <h2>Lead Management</h2>
               <button className={styles.addBtn}><Plus size={14} /> New Lead</button>
             </div>
-            <LeadsTable searchTerm={searchTerm} filteredLeads={filteredLeads} />
+            <div className={`${styles.tableCard} glass-panel`} style={{ width: '100%', marginTop: '20px' }}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Lead</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                    <th>AI Summary</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredLeads.map(lead => (
+                    <tr key={lead.id}>
+                      <td><span className={styles.leadName}>{lead.name}</span></td>
+                      <td><span className={styles.leadPhone}>{lead.phone}</span></td>
+                      <td>
+                        <span className={`${styles.statusBadge} ${styles[lead.status]}`}>
+                          {lead.status}
+                        </span>
+                      </td>
+                      <td><div className={styles.leadSummary}>{lead.summary}</div></td>
+                      <td>
+                        <button className={styles.viewBtn} onClick={() => setSelectedLead(lead)}>
+                          <Eye size={16} /> View
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      case 'Docs':
+        return (
+          <div className={`${styles.fullView} fade-in`}>
+            <div className={styles.viewHeader}>
+              <h2>API Documentation</h2>
+            </div>
+            <div className={styles.docsGrid}>
+              <div className={`${styles.docCard} glass-panel`}>
+                <div className={styles.docEndpoint}><code>POST</code> /api/calls</div>
+                <p>Log a new call interaction for AI processing.</p>
+                <pre className={styles.docCode}>
+{`{
+  "caller_id": "+15550102",
+  "audio_url": "s3://...",
+  "meta": { "campaign": "Q2_Sales" }
+}`}
+                </pre>
+              </div>
+              <div className={`${styles.docCard} glass-panel`}>
+                <div className={styles.docEndpoint}><code>GET</code> /api/leads/:id</div>
+                <p>Retrieve full lead intelligence and history.</p>
+                <pre className={styles.docCode}>
+{`{
+  "id": "lead_9283",
+  "status": "contacted",
+  "sentiment": "positive"
+}`}
+                </pre>
+              </div>
+            </div>
+          </div>
+        );
+      case 'Observability':
+        return (
+          <div className={`${styles.fullView} fade-in`}>
+            <div className={styles.viewHeader}>
+              <h2>System Observability</h2>
+            </div>
+            <div className={styles.obsGrid}>
+              <div className={`${styles.obsCard} glass-panel`}>
+                <h3>Worker Latency</h3>
+                <div className={styles.obsValue}>312ms</div>
+                <div className={styles.obsTrend}>Good</div>
+              </div>
+              <div className={`${styles.obsCard} glass-panel`}>
+                <h3>Error Rate</h3>
+                <div className={styles.obsValue} style={{color: '#EF4444'}}>0.02%</div>
+                <div className={styles.obsTrend}>Stable</div>
+              </div>
+              <div className={`${styles.obsCard} glass-panel`}>
+                <h3>Job Queue Depth</h3>
+                <div className={styles.obsValue}>12</div>
+                <div className={styles.obsTrend}>Active</div>
+              </div>
+              <div className={`${styles.obsChart} glass-panel`}>
+                <h3>Requests per minute</h3>
+                <ResponsiveContainer width="100%" height={200}>
+                  <LineChart data={CHART_DATA}>
+                    <Line type="stepAfter" dataKey="calls" stroke="var(--violet)" strokeWidth={2} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
           </div>
         );
       case 'Calls':
@@ -179,7 +266,7 @@ const Dashboard = ({ onBackToLanding }) => {
             </div>
             <div className={`${styles.activityCard} glass-panel`}>
               <div className={styles.activityList}>
-                {ACTIVITY.filter(a => a.msg.includes('WhatsApp') || a.msg.includes('follow-up')).map(item => (
+                {ACTIVITY.filter(a => a.msg.toLowerCase().includes('whatsapp') || a.msg.toLowerCase().includes('follow-up')).map(item => (
                   <div key={item.id} className={styles.activityItem}>
                     <div className={styles.activityDot} style={{background: '#25D366', boxShadow: '0 0 10px #25D366'}}></div>
                     <div className={styles.activityContent}>
@@ -330,34 +417,40 @@ const Dashboard = ({ onBackToLanding }) => {
         
         <nav className={styles.sidebarNav}>
           <button 
-            className={`${styles.navItem} ${activeTab === 'Overview' ? styles.active : ''}`} 
-            onClick={() => setActiveTab('Overview')}
+            className={`${styles.navItem} ${activeTab === 'Overview' && !selectedLead ? styles.active : ''}`} 
+            onClick={() => {setActiveTab('Overview'); setSelectedLead(null);}}
           >
             <LayoutDashboard size={20} /> <span>Overview</span>
           </button>
           <button 
-            className={`${styles.navItem} ${activeTab === 'Leads' ? styles.active : ''}`} 
-            onClick={() => setActiveTab('Leads')}
+            className={`${styles.navItem} ${activeTab === 'Leads' || selectedLead ? styles.active : ''}`} 
+            onClick={() => {setActiveTab('Leads'); setSelectedLead(null);}}
           >
             <Users size={20} /> <span>Leads</span>
           </button>
           <button 
             className={`${styles.navItem} ${activeTab === 'Calls' ? styles.active : ''}`} 
-            onClick={() => setActiveTab('Calls')}
+            onClick={() => {setActiveTab('Calls'); setSelectedLead(null);}}
           >
             <PhoneCall size={20} /> <span>Calls</span>
           </button>
           <button 
             className={`${styles.navItem} ${activeTab === 'WhatsApp' ? styles.active : ''}`} 
-            onClick={() => setActiveTab('WhatsApp')}
+            onClick={() => {setActiveTab('WhatsApp'); setSelectedLead(null);}}
           >
             <MessageCircle size={20} /> <span>WhatsApp</span>
           </button>
           <button 
-            className={`${styles.navItem} ${activeTab === 'Analytics' ? styles.active : ''}`} 
-            onClick={() => setActiveTab('Analytics')}
+            className={`${styles.navItem} ${activeTab === 'Docs' ? styles.active : ''}`} 
+            onClick={() => {setActiveTab('Docs'); setSelectedLead(null);}}
           >
-            <Activity size={20} /> <span>Analytics</span>
+            <BookOpen size={20} /> <span>API Docs</span>
+          </button>
+          <button 
+            className={`${styles.navItem} ${activeTab === 'Observability' ? styles.active : ''}`} 
+            onClick={() => {setActiveTab('Observability'); setSelectedLead(null);}}
+          >
+            <Eye size={20} /> <span>Observability</span>
           </button>
         </nav>
         
@@ -374,15 +467,15 @@ const Dashboard = ({ onBackToLanding }) => {
       <main className={styles.mainContent}>
         <header className={styles.header}>
           <div className={styles.headerLeft}>
-            <h1>{activeTab}</h1>
-            <p>Managing your LeadPulse environment.</p>
+            <h1>{selectedLead ? 'Lead Detail' : activeTab}</h1>
+            <p>{selectedLead ? `Analysis for ${selectedLead.name}` : 'Managing your LeadPulse environment.'}</p>
           </div>
           <div className={styles.headerActions}>
             <div className={styles.searchBar}>
               <Search size={18} />
               <input 
                 type="text" 
-                placeholder="Search everything..." 
+                placeholder="Search leads..." 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -392,7 +485,7 @@ const Dashboard = ({ onBackToLanding }) => {
           </div>
         </header>
         
-        {activeTab === 'Overview' && (
+        {activeTab === 'Overview' && !selectedLead && (
           <div className={styles.kpiRow}>
             <KpiCard label="Total Leads" value="12,402" trend="+12.5%" trendUp={true} />
             <KpiCard label="Calls Today" value="142" trend="+5.2%" trendUp={true} />
