@@ -86,7 +86,38 @@ const Auth = ({ onAuthSuccess, onBack }) => {
     <div className={styles.portalWrapper}>
       {/* Immersive Background Elements */}
       <div className={styles.nebula}></div>
+      <div className={styles.gridOverlay}></div>
       <div className={styles.scanner}></div>
+      
+      {/* HUD Telemetry Elements */}
+      <div className={styles.hudTopRight}>
+        <div className={styles.hudLine}>SYSTEM_UPTIME: 142:08:12:44</div>
+        <div className={styles.hudLine}>LATENCY: 12ms</div>
+        <div className={styles.hudLine}>ENCRYPTION: ACTIVE</div>
+      </div>
+
+      <div className={styles.hudBottomLeft}>
+        <div className={styles.hudLine}>NODE_ID: LP_CLUSTER_04</div>
+        <div className={styles.hudLine}>COORDS: 40.7128° N, 74.0060° W</div>
+      </div>
+
+      <div className={styles.backgroundWatermark}>LEADPULSE_V4</div>
+
+      {/* Floating Data Particles */}
+      <div className={styles.particles}>
+        {[...Array(20)].map((_, i) => (
+          <div 
+            key={i} 
+            className={styles.particle} 
+            style={{ 
+              left: `${Math.random() * 100}%`, 
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 5}s`,
+              opacity: Math.random() * 0.5 + 0.2
+            }}
+          ></div>
+        ))}
+      </div>
 
       <button className={styles.backButton} onClick={onBack} disabled={isProcessing}>
         <ArrowLeft size={16} /> EXIT_TO_SYSTEM
@@ -97,92 +128,96 @@ const Auth = ({ onAuthSuccess, onBack }) => {
         <div className={styles.pulseRing}></div>
         <div className={styles.pulseRing} style={{ animationDelay: '1s', width: '600px', height: '600px' }}></div>
 
-        <div className={styles.glassCard}>
-          <div className={styles.cardGlow}></div>
-          
-          <div className={styles.header}>
-            <div className={styles.authLogo}>
-              <Fingerprint size={32} color="var(--violet)" />
-              <div className={styles.logoAura}></div>
+        <div className={styles.splitLayout}>
+          <div className={styles.glassCard}>
+            <div className={styles.cardGlow}></div>
+            
+            <div className={styles.header}>
+              <div className={styles.authLogo}>
+                <Fingerprint size={32} color="var(--violet)" />
+                <div className={styles.logoAura}></div>
+              </div>
+              <h1>{isLogin ? 'LeadPulse Access' : 'Create Node'}</h1>
+              <p className={styles.subtitle}>
+                {isLogin ? 'Authentication required' : 'Initialize your engine'}
+              </p>
             </div>
-            <h1>{isLogin ? 'LeadPulse Access' : 'Create Node'}</h1>
-            <p className={styles.subtitle}>
-              {isLogin ? 'Authentication required for API cluster' : 'Initialize your lead management engine'}
-            </p>
-          </div>
 
-          <form className={styles.form} onSubmit={handleSubmit}>
-            <div className={styles.inputField}>
-              <div className={styles.inputIcon}><Mail size={18} /></div>
-              <input 
-                type="email" 
-                placeholder="Developer Email" 
-                required 
+            <form className={styles.form} onSubmit={handleSubmit}>
+              <div className={styles.inputField}>
+                <div className={styles.inputIcon}><Mail size={18} /></div>
+                <input 
+                  type="email" 
+                  placeholder="Developer Email" 
+                  required 
+                  disabled={isProcessing}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+                <div className={styles.inputTrace}></div>
+              </div>
+
+              <div className={styles.inputField}>
+                <div className={styles.inputIcon}><Lock size={18} /></div>
+                <input 
+                  type="password" 
+                  placeholder="Access Key" 
+                  required 
+                  disabled={isProcessing}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <div className={styles.inputTrace}></div>
+              </div>
+
+              {error && <div className={styles.errorMessage}>{error}</div>}
+
+              <button type="submit" className={styles.portalBtn} disabled={isProcessing}>
+                <span className={styles.btnText}>
+                  {isProcessing ? 'SYNCHRONIZING...' : isLogin ? 'INITIATE SESSION' : 'INITIALIZE API'}
+                </span>
+                {isProcessing ? (
+                  <Loader2 size={20} className={styles.spin} />
+                ) : (
+                  <ArrowRight size={20} className={styles.arrow} />
+                )}
+              </button>
+            </form>
+
+            <div className={styles.metaActions}>
+              <button 
+                className={styles.toggleBtn} 
+                onClick={() => setIsLogin(!isLogin)}
                 disabled={isProcessing}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-              <div className={styles.inputTrace}></div>
+              >
+                {isLogin ? 'NEW_ACCOUNT.SH' : 'EXISTING_USER.LOG'}
+              </button>
+              <div className={styles.separator}></div>
+              <button className={styles.googleAccess} disabled={isProcessing}>
+                <Globe size={16} /> CLOUD_AUTH
+              </button>
+            </div>
+          </div>
+
+          <div className={styles.sidePanel}>
+            {/* Live Terminal Widget */}
+            <div className={`${styles.terminalWidget} glass-panel`}>
+              <div className={styles.termHeader}>
+                <Terminal size={14} /> <span>AUTH_LOG.STREAM</span>
+              </div>
+              <div className={styles.termBody}>
+                {logs.map((log, i) => (
+                  <div key={i} className={styles.logLine}>{log}</div>
+                ))}
+              </div>
             </div>
 
-            <div className={styles.inputField}>
-              <div className={styles.inputIcon}><Lock size={18} /></div>
-              <input 
-                type="password" 
-                placeholder="Access Key" 
-                required 
-                disabled={isProcessing}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              <div className={styles.inputTrace}></div>
+            {/* Tech Badges */}
+            <div className={styles.techCluster}>
+              <div className={styles.techBadge}><Cpu size={14} /> AI_ENGINE_V4</div>
+              <div className={styles.techBadge}><ShieldCheck size={14} /> AES_256</div>
             </div>
-
-            {error && <div className={styles.errorMessage}>{error}</div>}
-
-            <button type="submit" className={styles.portalBtn} disabled={isProcessing}>
-              <span className={styles.btnText}>
-                {isProcessing ? 'SYNCHRONIZING...' : isLogin ? 'INITIATE SESSION' : 'INITIALIZE API'}
-              </span>
-              {isProcessing ? (
-                <Loader2 size={20} className={styles.spin} />
-              ) : (
-                <ArrowRight size={20} className={styles.arrow} />
-              )}
-            </button>
-          </form>
-
-          <div className={styles.metaActions}>
-            <button 
-              className={styles.toggleBtn} 
-              onClick={() => setIsLogin(!isLogin)}
-              disabled={isProcessing}
-            >
-              {isLogin ? 'NEW_ACCOUNT.SH' : 'EXISTING_USER.LOG'}
-            </button>
-            <div className={styles.separator}></div>
-            <button className={styles.googleAccess} disabled={isProcessing}>
-              <Globe size={16} /> CLOUD_AUTH
-            </button>
           </div>
-        </div>
-
-        {/* Live Terminal Widget */}
-        <div className={`${styles.terminalWidget} glass-panel`}>
-          <div className={styles.termHeader}>
-            <Terminal size={14} /> <span>AUTH_LOG.STREAM</span>
-          </div>
-          <div className={styles.termBody}>
-            {logs.map((log, i) => (
-              <div key={i} className={styles.logLine}>{log}</div>
-            ))}
-          </div>
-        </div>
-
-        {/* Tech Badges */}
-        <div className={styles.techCluster}>
-          <div className={styles.techBadge}><Cpu size={14} /> AI_ENGINE_V4</div>
-          <div className={styles.techBadge}><ShieldCheck size={14} /> AES_256</div>
         </div>
       </div>
     </div>

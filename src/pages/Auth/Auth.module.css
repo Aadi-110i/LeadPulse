@@ -1,7 +1,7 @@
 .portalWrapper {
   min-height: 100vh;
   width: 100vw;
-  background-color: #000000;
+  background-color: #020205;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -18,17 +18,35 @@
   width: 150%;
   height: 150%;
   background: 
-    radial-gradient(circle at 30% 30%, rgba(139, 92, 246, 0.15) 0%, transparent 40%),
-    radial-gradient(circle at 70% 70%, rgba(236, 72, 153, 0.1) 0%, transparent 40%),
-    radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.05) 0%, transparent 60%);
-  filter: blur(100px);
-  animation: drift 30s ease-in-out infinite alternate;
+    radial-gradient(circle at 20% 30%, rgba(139, 92, 246, 0.25) 0%, transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(236, 72, 153, 0.2) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.1) 0%, transparent 60%),
+    radial-gradient(circle at 30% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 40%);
+  filter: blur(80px);
+  animation: drift 40s ease-in-out infinite alternate;
   z-index: 1;
 }
 
 @keyframes drift {
   from { transform: translate(-50%, -50%) rotate(0deg) scale(1); }
-  to { transform: translate(-45%, -55%) rotate(5deg) scale(1.1); }
+  to { transform: translate(-45%, -55%) rotate(8deg) scale(1.2); }
+}
+
+.gridOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(rgba(139, 92, 246, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(139, 92, 246, 0.05) 1px, transparent 1px);
+  background-size: 60px 60px;
+  perspective: 1000px;
+  transform: rotateX(60deg) translateY(-20%) scale(2);
+  transform-origin: top;
+  z-index: 2;
+  opacity: 0.3;
 }
 
 .scanner {
@@ -37,16 +55,79 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 1px,
-    rgba(139, 92, 246, 0.02) 2px,
-    transparent 3px
+  background: linear-gradient(
+    rgba(139, 92, 246, 0) 50%, 
+    rgba(139, 92, 246, 0.05) 50%
   );
   background-size: 100% 4px;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* HUD Elements */
+.hudTopRight, .hudBottomLeft {
+  position: absolute;
+  z-index: 5;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  opacity: 0.5;
+}
+
+.hudTopRight { top: 40px; right: 40px; text-align: right; }
+.hudBottomLeft { bottom: 40px; left: 40px; }
+
+.hudLine {
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.backgroundWatermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 15vw;
+  font-family: var(--font-heading);
+  font-weight: 900;
+  color: white;
+  opacity: 0.02;
+  z-index: 1;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* Particles */
+.particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   z-index: 2;
   pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 0 10px white;
+  animation: floatParticle 10s infinite linear;
+}
+
+@keyframes floatParticle {
+  0% { transform: translateY(0) translateX(0); }
+  33% { transform: translateY(-20px) translateX(10px); }
+  66% { transform: translateY(-10px) translateX(-10px); }
+  100% { transform: translateY(0) translateX(0); }
 }
 
 .backButton {
@@ -83,7 +164,21 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  transform: translateY(-20px);
+}
+
+.splitLayout {
+  display: flex;
+  align-items: flex-start;
+  gap: 80px; /* Increased from 48px */
+  position: relative;
+  max-width: 95vw;
+}
+
+.sidePanel {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  margin-top: 30px;
 }
 
 /* Pulse Rings */
@@ -92,8 +187,8 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 500px;
-  height: 500px;
+  width: 600px;
+  height: 600px;
   border: 1px solid rgba(139, 92, 246, 0.1);
   border-radius: 50%;
   animation: pulseScale 4s ease-out infinite;
@@ -108,13 +203,13 @@
 
 /* Immersive Glass Card */
 .glassCard {
-  width: 380px;
-  background: rgba(10, 10, 20, 0.6);
-  backdrop-filter: blur(50px) saturate(180%);
-  -webkit-backdrop-filter: blur(50px) saturate(180%);
+  width: 500px; /* Increased from 420px */
+  background: rgba(10, 10, 20, 0.65);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 28px;
-  padding: 24px 32px; /* Further reduced from 32px 40px */
+  border-radius: 36px;
+  padding: 48px 54px; /* Increased padding */
   position: relative;
   box-shadow: 
     0 40px 100px rgba(0, 0, 0, 0.8),
@@ -148,13 +243,13 @@
 
 .header {
   text-align: center;
-  margin-bottom: 24px; /* Reduced from 32px */
+  margin-bottom: 32px;
 }
 
 .authLogo {
   position: relative;
   display: inline-block;
-  margin-bottom: 12px; /* Reduced from 24px */
+  margin-bottom: 20px;
 }
 
 .logoAura {
@@ -162,23 +257,23 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 48px; /* Reduced from 60px */
-  height: 48px;
+  width: 64px;
+  height: 64px;
   background: var(--violet);
-  filter: blur(25px);
+  filter: blur(30px);
   opacity: 0.3;
   z-index: -1;
 }
 
 .header h1 {
-  font-size: 1.8rem; /* Reduced from 2.2rem */
+  font-size: 2.4rem; /* Increased from 2rem */
   letter-spacing: -0.02em;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 
 .subtitle {
   color: var(--text-dim);
-  font-size: 0.8rem; /* Reduced from 0.9rem */
+  font-size: 0.9rem;
   font-family: var(--font-mono);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -187,7 +282,7 @@
 .form {
   display: flex;
   flex-direction: column;
-  gap: 12px; /* Reduced from 16px */
+  gap: 20px;
 }
 
 .inputField {
@@ -196,7 +291,7 @@
   align-items: center;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px; /* Reduced from 16px */
+  border-radius: 16px;
   transition: var(--transition-smooth);
 }
 
@@ -206,7 +301,7 @@
 }
 
 .inputIcon {
-  padding: 0 16px; /* Reduced from 20px */
+  padding: 0 22px;
   color: var(--text-dim);
   transition: var(--transition-smooth);
 }
@@ -219,9 +314,9 @@
   flex: 1;
   background: transparent;
   border: none;
-  padding: 14px 0; /* Reduced from 18px */
+  padding: 20px 0; /* Increased */
   color: white;
-  font-size: 0.9rem;
+  font-size: 1rem; /* Increased */
   outline: none;
   font-family: var(--font-body);
 }
@@ -245,27 +340,27 @@
   background: rgba(239, 68, 68, 0.1);
   border: 1px solid rgba(239, 68, 68, 0.2);
   color: #EF4444;
-  padding: 8px 12px;
-  border-radius: 10px;
-  font-size: 0.8rem;
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-size: 0.9rem;
   font-family: var(--font-mono);
   text-align: center;
   margin-top: -4px;
 }
 
 .portalBtn {
-  margin-top: 4px;
+  margin-top: 12px;
   background: linear-gradient(135deg, var(--violet), var(--pink));
   border: none;
-  padding: 14px; /* Reduced from 18px */
-  border-radius: 12px;
+  padding: 20px;
+  border-radius: 16px;
   color: white;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 14px;
   cursor: pointer;
   transition: var(--transition-smooth);
   box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
@@ -285,7 +380,7 @@
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
 .metaActions {
-  margin-top: 20px; /* Reduced from 24px */
+  margin-top: 32px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -296,7 +391,7 @@
   border: none;
   color: var(--violet);
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;
   letter-spacing: 0.1em;
@@ -304,7 +399,7 @@
 
 .separator {
   width: 1px;
-  height: 20px;
+  height: 24px;
   background: rgba(255, 255, 255, 0.1);
 }
 
@@ -313,40 +408,40 @@
   border: none;
   color: var(--text-dim);
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 /* Terminal Widget */
 .terminalWidget {
   margin-top: 20px;
-  width: 360px;
-  padding: 12px;
-  border-radius: 16px;
+  width: 540px; /* Increased from 400px */
+  padding: 24px;
+  border-radius: 20px;
   background: rgba(0, 0, 0, 0.4);
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: 0.85rem; /* Increased */
 }
 
 .termHeader {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   color: var(--text-dim);
-  margin-bottom: 8px;
-  padding-bottom: 6px;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .termBody {
-  height: 60px;
+  height: 140px; /* Increased from 100px */
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
 }
 
 .logLine {
@@ -356,26 +451,33 @@
 
 /* Tech Cluster */
 .techCluster {
-  margin-top: 24px;
+  margin-top: 32px;
   display: flex;
-  gap: 16px;
+  gap: 20px;
 }
 
 .techBadge {
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  padding: 6px 12px;
+  padding: 8px 16px;
   border-radius: 100px;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-family: var(--font-mono);
   color: var(--text-dim);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+}
+
+@media (max-width: 1100px) {
+  .splitLayout { flex-direction: column; align-items: center; gap: 40px; }
+  .sidePanel { margin-top: 0; }
+  .terminalWidget { width: 500px; }
 }
 
 @media (max-width: 600px) {
   .glassCard { width: 90vw; padding: 24px; }
   .terminalWidget { width: 90vw; }
   .backButton { top: 20px; left: 20px; }
+  .hudTopRight, .hudBottomLeft { display: none; }
 }
