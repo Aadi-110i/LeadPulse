@@ -1,3 +1,4 @@
+import React, { useState, useMemo } from 'react';
 import { 
   LayoutDashboard, 
   Users, 
@@ -53,6 +54,41 @@ const KpiCard = ({ label, value, trend, trendUp }) => (
         {trendUp ? <ArrowUpRight size={14} /> : null} {trend}
       </span>
     </div>
+  </div>
+);
+
+const LeadsTable = ({ filteredLeads, onSelectLead }) => (
+  <div className={`${styles.tableCard} glass-panel`} style={{ width: '100%', marginTop: '20px' }}>
+    <table className={styles.table}>
+      <thead>
+        <tr>
+          <th>Lead</th>
+          <th>Phone</th>
+          <th>Status</th>
+          <th>AI Summary</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {filteredLeads.map(lead => (
+          <tr key={lead.id}>
+            <td><span className={styles.leadName}>{lead.name}</span></td>
+            <td><span className={styles.leadPhone}>{lead.phone}</span></td>
+            <td>
+              <span className={`${styles.statusBadge} ${styles[lead.status]}`}>
+                {lead.status}
+              </span>
+            </td>
+            <td><div className={styles.leadSummary}>{lead.summary}</div></td>
+            <td>
+              <button className={styles.viewBtn} onClick={() => onSelectLead(lead)}>
+                <Eye size={16} /> View
+              </button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   </div>
 );
 

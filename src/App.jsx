@@ -14,7 +14,10 @@ function App() {
       {currentView === 'landing' ? (
         <LandingPage onEnterDashboard={() => setCurrentView('auth')} />
       ) : currentView === 'auth' ? (
-        <Auth onAuthSuccess={() => setCurrentView('dashboard')} />
+        <Auth 
+          onAuthSuccess={() => setCurrentView('dashboard')} 
+          onBack={() => setCurrentView('landing')}
+        />
       ) : (
         <Dashboard onBackToLanding={() => setCurrentView('landing')} />
       )}
