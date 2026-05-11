@@ -25,7 +25,8 @@ import {
   Globe,
   Cpu,
   Terminal,
-  Server
+  Server,
+  Home
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -292,16 +293,21 @@ const Dashboard = ({ onBackToLanding }) => {
           <BookOpen size={20} />
         </button>
         <div style={{width: '1px', background: 'rgba(255,255,255,0.1)', height: '24px', margin: '0 4px'}}></div>
-        <button className={styles.navItem} onClick={onBackToLanding} title="Terminate Session">
+        <button className={styles.navItem} onClick={onBackToLanding} title="Back to Home">
+          <Home size={20} color="#06B6D4" />
+        </button>
+        <button className={styles.navItem} onClick={handleSignOut} title="Sign Out">
           <LogOut size={20} color="#EF4444" />
         </button>
       </nav>
       
       <main className={styles.mainContent}>
         <header className={styles.header}>
-          <div className={styles.headerLeft}>
-            <h1>SYSTEM_TERMINAL::LEADPULSE_OS</h1>
-            <p style={{fontSize: '0.6rem', color: '#64748b'}}>NODE: 04 // STATUS: SECURE // {activeTab.toUpperCase()}</p>
+          <div className={styles.headerLeft} style={{cursor: 'pointer'}} onClick={onBackToLanding} title="Back to Home">
+            <h1 style={{transition: 'color 0.2s'}} onMouseEnter={e => e.currentTarget.style.color='#06B6D4'} onMouseLeave={e => e.currentTarget.style.color=''}>
+              SYSTEM_TERMINAL::LEADPULSE_OS
+            </h1>
+            <p style={{fontSize: '0.6rem', color: '#64748b'}}>NODE: 04 // STATUS: SECURE // {activeTab.toUpperCase()} // <span style={{color: '#06B6D4'}}>← CLICK TO GO HOME</span></p>
           </div>
           <div style={{display: 'flex', gap: '20px', alignItems: 'center'}}>
             <div style={{fontFamily: 'var(--font-mono)', fontSize: '0.6rem', color: '#8b5cf6'}}>AUTH::SESSION_ACTIVE</div>

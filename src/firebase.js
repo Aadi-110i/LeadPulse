@@ -13,17 +13,35 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Warn about missing critical config values
+const requiredKeys = ['apiKey', 'authDomain', 'projectId', 'appId'];
+const missingKeys = requiredKeys.filter(key => !firebaseConfig[key]);
+if (missingKeys.length > 0) {
+  console.error(
+    `[Firebase] Missing critical environment variables: ${missingKeys.join(', ')}. ` +
+    `Make sure all VITE_FIREBASE_* variables are set in your Vercel Environment Variables.`
+  );
+}
 
-// Initialize Services
-export const auth = getAuth(app);
-
-// Analytics initialization (safe check)
+// Initialize Firebase with error handling
+let app = null;
+let auth = null;
 let analytics = null;
-isSupported().then(yes => {
-  if (yes) analytics = getAnalytics(app);
-});
 
-export { analytics };
+try {
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  
+  // Analytics initialization (safe check)
+  isSupported().then(yes => {
+    if (yes && app) analytics = getAnalytics(app);
+  }).catch(() => {});
+} catch (err) {
+  console.error("[Firebase] Initialization failed:", err.message);
+  console.error("[Firebase] Config received:", JSON.stringify(
+    Object.fromEntries(Object.entries(firebaseConfig).map(([k, v]) => [k, v ? '✓ SET' : '✗ MISSING']))
+  ));
+}
+
+export { auth, analytics };
 export default app;

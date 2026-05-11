@@ -12,6 +12,13 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Guard: if Firebase Auth failed to initialize, skip auth listener
+    if (!auth) {
+      console.warn("[App] Firebase Auth not available — showing landing page.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
         console.log("Auth State Changed:", currentUser ? "User Logged In" : "No User");
