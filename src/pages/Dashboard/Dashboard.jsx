@@ -303,13 +303,34 @@ const Dashboard = ({ onBackToLanding }) => {
       
       <main className={styles.mainContent}>
         <header className={styles.header}>
-          <div className={styles.headerLeft} style={{cursor: 'pointer'}} onClick={onBackToLanding} title="Back to Home">
-            <h1 style={{transition: 'color 0.2s'}} onMouseEnter={e => e.currentTarget.style.color='#06B6D4'} onMouseLeave={e => e.currentTarget.style.color=''}>
-              SYSTEM_TERMINAL::LEADPULSE_OS
-            </h1>
-            <p style={{fontSize: '0.6rem', color: '#64748b'}}>NODE: 04 // STATUS: SECURE // {activeTab.toUpperCase()} // <span style={{color: '#06B6D4'}}>← CLICK TO GO HOME</span></p>
+          <div className={styles.headerLeft}>
+            <h1>SYSTEM_TERMINAL::LEADPULSE_OS</h1>
+            <p style={{fontSize: '0.6rem', color: '#64748b'}}>NODE: 04 // STATUS: SECURE // {activeTab.toUpperCase()}</p>
           </div>
-          <div style={{display: 'flex', gap: '20px', alignItems: 'center'}}>
+          <div style={{display: 'flex', gap: '16px', alignItems: 'center'}}>
+            <button
+              onClick={onBackToLanding}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                background: 'rgba(6,182,212,0.1)',
+                border: '1px solid rgba(6,182,212,0.5)',
+                borderRadius: '8px',
+                padding: '8px 16px',
+                color: '#06B6D4',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.7rem',
+                fontWeight: '700',
+                letterSpacing: '0.1em',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background='rgba(6,182,212,0.25)'; e.currentTarget.style.boxShadow='0 0 20px rgba(6,182,212,0.3)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background='rgba(6,182,212,0.1)'; e.currentTarget.style.boxShadow='none'; }}
+            >
+              <Home size={14} /> ← HOME
+            </button>
             <div style={{fontFamily: 'var(--font-mono)', fontSize: '0.6rem', color: '#8b5cf6'}}>AUTH::SESSION_ACTIVE</div>
             <div style={{width: '32px', height: '32px', borderRadius: '50%', background: '#8b5cf6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 'bold', color: '#fff'}}>JD</div>
           </div>
