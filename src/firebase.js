@@ -1,9 +1,8 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getAnalytics } from "firebase/analytics";
+import { getAnalytics, isSupported } from "firebase/analytics";
 
 // Your web app's Firebase configuration
-// These are loaded from the .env file
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -19,6 +18,12 @@ const app = initializeApp(firebaseConfig);
 
 // Initialize Services
 export const auth = getAuth(app);
-export const analytics = getAnalytics(app);
 
+// Analytics initialization (safe check)
+let analytics = null;
+isSupported().then(yes => {
+  if (yes) analytics = getAnalytics(app);
+});
+
+export { analytics };
 export default app;

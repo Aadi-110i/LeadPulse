@@ -12,14 +12,23 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      if (currentUser) {
-        setCurrentView('dashboard');
-      }
+    try {
+      const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        console.log("Auth State Changed:", currentUser ? "User Logged In" : "No User");
+        setUser(currentUser);
+        if (currentUser) {
+          setCurrentView('dashboard');
+        }
+        setLoading(false);
+      }, (error) => {
+        console.error("Auth State Error:", error);
+        setLoading(false);
+      });
+      return () => unsubscribe();
+    } catch (err) {
+      console.error("Firebase Auth initialization failed:", err);
       setLoading(false);
-    });
-    return () => unsubscribe();
+    }
   }, []);
 
   if (loading) {
