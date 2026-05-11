@@ -13,6 +13,14 @@ import {
 } from 'lucide-react';
 import styles from './Auth.module.css';
 
+import { auth } from '../../firebase';
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup
+} from 'firebase/auth';
+
 const Auth = ({ onAuthSuccess, onBack }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -21,13 +29,13 @@ const Auth = ({ onAuthSuccess, onBack }) => {
   const [error, setError] = useState('');
   const [logs, setLogs] = useState(['> INITIALIZING SECURE PROTOCOL...']);
 
-  // Simulate scrolling terminal logs when processing or typing
+  // Simulate scrolling terminal logs
   useEffect(() => {
     if (isProcessing) {
       const messages = [
         '> ESTABLISHING ENCRYPTED TUNNEL...',
-        '> HANDSHAKING WITH AUTH_SERVER_04...',
-        '> VERIFYING JWT SIGNATURE...',
+        '> CONNECTING TO FIREBASE_NODE_01...',
+        '> VERIFYING CLOUD_TOKEN...',
         '> CROSS-CHECKING PERMISSIONS...',
         '> ACCESS GRANTED. REDIRECTING...'
       ];
@@ -50,35 +58,48 @@ const Auth = ({ onAuthSuccess, onBack }) => {
     setError('');
     
     try {
-      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem('token', data.data.token);
-        localStorage.setItem('user', JSON.stringify(data.data.user));
-        
-        // Short delay to allow the "Access Granted" log to appear
-        setTimeout(() => {
-          setIsProcessing(false);
-          onAuthSuccess();
-        }, 2000);
+      if (isLogin) {
+        await signInWithEmailAndPassword(auth, email, password);
       } else {
-        setIsProcessing(false);
-        setError(data.message || 'Authentication failed');
-        setLogs(prev => [...prev.slice(-4), `> ERROR: ${data.message?.toUpperCase() || 'AUTH_FAILED'}`]);
+        await createUserWithEmailAndPassword(auth, email, password);
       }
+      
+      // onAuthSuccess will be called by App.jsx listener usually, 
+      // but we'll trigger it here for faster UI response after the log simulation
+      setTimeout(() => {
+        setIsProcessing(false);
+        onAuthSuccess();
+      }, 2000);
+
     } catch (err) {
       setIsProcessing(false);
-      setError('Could not connect to authentication server.');
-      setLogs(prev => [...prev.slice(-4), '> ERROR: CONNECTION_REFUSED']);
+      let friendlyError = 'Authentication failed';
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+        friendlyError = 'Invalid email or access key.';
+      } else if (err.code === 'auth/email-already-in-use') {
+        friendlyError = 'This node is already registered.';
+      } else if (err.code === 'auth/weak-password') {
+        friendlyError = 'Access key must be at least 6 characters.';
+      }
+      setError(friendlyError);
+      setLogs(prev => [...prev.slice(-4), `> ERROR: ${err.code?.toUpperCase() || 'AUTH_FAILED'}`]);
+    }
+  };
+
+  const handleGoogleAuth = async () => {
+    setIsProcessing(true);
+    setError('');
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+      setTimeout(() => {
+        setIsProcessing(false);
+        onAuthSuccess();
+      }, 2000);
+    } catch (err) {
+      setIsProcessing(false);
+      setError('Cloud Auth failed.');
+      setLogs(prev => [...prev.slice(-4), '> ERROR: CLOUD_AUTH_REJECTED']);
     }
   };
 
@@ -193,7 +214,11 @@ const Auth = ({ onAuthSuccess, onBack }) => {
                 {isLogin ? 'NEW_ACCOUNT.SH' : 'EXISTING_USER.LOG'}
               </button>
               <div className={styles.separator}></div>
-              <button className={styles.googleAccess} disabled={isProcessing}>
+              <button 
+                className={styles.googleAccess} 
+                onClick={handleGoogleAuth}
+                disabled={isProcessing}
+              >
                 <Globe size={16} /> CLOUD_AUTH
               </button>
             </div>

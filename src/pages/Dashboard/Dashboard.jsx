@@ -63,10 +63,22 @@ const TelemetryNode = ({ label, value, subValue, icon: Icon }) => (
   </div>
 );
 
+import { auth } from '../../firebase';
+import { signOut } from 'firebase/auth';
+
 const Dashboard = ({ onBackToLanding }) => {
   const [activeTab, setActiveTab] = useState('Overview');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLead, setSelectedLead] = useState(null);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      onBackToLanding();
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
+  };
   
   const filteredLeads = useMemo(() => {
     return LEADS.filter(lead => 
