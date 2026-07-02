@@ -40,24 +40,24 @@ function App() {
 
   if (loading) {
     return (
-      <div className="app-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div className="mesh-bg"></div>
-        <div style={{ color: 'var(--violet)', fontFamily: 'var(--font-mono)', fontSize: '1rem', letterSpacing: '0.2em' }}>
-          BOOTING_SYSTEM...
+      <div className="boot-screen">
+        <div className="aurora-bg" />
+        <div className="boot-logo">Lead<span>Pulse</span></div>
+        <div className="boot-bar">
+          <div className="boot-bar-fill" />
         </div>
+        <div className="boot-text">Initializing system...</div>
       </div>
     );
   }
 
   return (
     <div className="app-container">
-      <div className="mesh-bg"></div>
-      
       {currentView === 'landing' ? (
         <LandingPage onEnterDashboard={() => user ? setCurrentView('dashboard') : setCurrentView('auth')} />
       ) : currentView === 'auth' ? (
-        <Auth 
-          onAuthSuccess={() => setCurrentView('dashboard')} 
+        <Auth
+          onAuthSuccess={() => setCurrentView('dashboard')}
           onBack={() => setCurrentView('landing')}
         />
       ) : (

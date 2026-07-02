@@ -1,47 +1,35 @@
 import React, { useState, useMemo } from 'react';
-import { 
-  LayoutDashboard, 
-  Users, 
-  PhoneCall, 
-  MessageCircle, 
-  Activity, 
-  Bell, 
-  Search,
-  ArrowUpRight,
-  MoreHorizontal,
-  Plus,
-  Filter,
-  LogOut,
-  ChevronRight,
-  Settings,
+import {
+  LayoutDashboard,
+  Users,
   BookOpen,
+  Activity,
+  ArrowUpRight,
+  Plus,
+  LogOut,
   Eye,
-  History,
-  Clock,
   ArrowLeft,
   Brain,
-  ShieldCheck,
-  Zap,
-  Globe,
-  Cpu,
-  Terminal,
   Server,
-  Home
+  Home,
+  Cpu,
+  Search
 } from 'lucide-react';
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
+import {
   AreaChart,
-  Area
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer
 } from 'recharts';
 import { LEADS, ACTIVITY } from '../../data/mockData';
+import { auth } from '../../firebase';
+import { signOut } from 'firebase/auth';
 import styles from './Dashboard.module.css';
 
+// ─── Chart Data ───────────────────────────────────────────────────────────────
 const CHART_DATA = [
   { name: '00:00', calls: 400, followups: 240 },
   { name: '04:00', calls: 300, followups: 139 },
@@ -52,21 +40,44 @@ const CHART_DATA = [
   { name: '23:59', calls: 700, followups: 430 },
 ];
 
+// ─── Custom Tooltip ───────────────────────────────────────────────────────────
+const CustomTooltip = ({ active, payload, label }) => {
+  if (!active || !payload) return null;
+  return (
+    <div style={{
+      background: 'rgba(4, 8, 16, 0.95)',
+      border: '1px solid rgba(0, 212, 255, 0.2)',
+      borderRadius: '10px',
+      padding: '10px 14px',
+      fontFamily: 'var(--font-mono)',
+      fontSize: '0.7rem',
+    }}>
+      <div style={{ color: 'var(--text-dim)', marginBottom: '6px' }}>{label}</div>
+      {payload.map((p, i) => (
+        <div key={i} style={{ color: p.stroke, display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <span>{p.name}:</span>
+          <span style={{ color: '#fff', fontWeight: 700 }}>{p.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// ─── KPI Card ─────────────────────────────────────────────────────────────────
 const TelemetryNode = ({ label, value, subValue, icon: Icon }) => (
   <div className={`${styles.tacticalPanel} ${styles.kpiCard}`}>
-    <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '10px'}}>
-      <Icon size={14} color="#8b5cf6" />
-      <span style={{fontSize: '0.5rem', opacity: 0.5}}>DATA_STREAMS_ACTIVE</span>
+    <div className={styles.panelGlow} />
+    <div className={styles.kpiHeader}>
+      <Icon size={14} color="var(--cyan)" />
+      <span className={styles.kpiTag}>STREAM_ACTIVE</span>
     </div>
     <span className={styles.kpiLabel}>{label}</span>
     <div className={styles.kpiValue}>{value}</div>
-    <div style={{fontSize: '0.6rem', color: '#10B981', marginTop: '4px'}}>{subValue}</div>
+    <div className={styles.kpiSubValue}>{subValue}</div>
   </div>
 );
 
-import { auth } from '../../firebase';
-import { signOut } from 'firebase/auth';
-
+// ─── Dashboard ────────────────────────────────────────────────────────────────
 const Dashboard = ({ onBackToLanding }) => {
   const [activeTab, setActiveTab] = useState('Overview');
   const [searchTerm, setSearchTerm] = useState('');
@@ -80,91 +91,116 @@ const Dashboard = ({ onBackToLanding }) => {
       console.error('Sign out error:', error);
     }
   };
-  
+
   const filteredLeads = useMemo(() => {
-    return LEADS.filter(lead => 
+    return LEADS.filter(lead =>
       lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       lead.summary.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [searchTerm]);
 
+  // ─── Overview ───────────────────────────────────────────────────────────────
   const renderOverview = () => (
     <>
-      {/* Column 1: Core Telemetry */}
+      {/* Left: KPI Telemetry */}
       <div className={styles.leftColumn}>
-        <TelemetryNode label="DATABASE_NODES" value="12,402" subValue="SYNC_STABLE" icon={Server} />
-        <TelemetryNode label="ACTIVE_SESIONS" value="142" subValue="+12%_PEAK" icon={Activity} />
-        <TelemetryNode label="AI_CORES_ACTIVE" value="138" subValue="THREAD_SAFE" icon={Brain} />
-        <div className={styles.tacticalPanel} style={{flex: 1, padding: '16px'}}>
-          <span className={styles.kpiLabel}>SYSTEM_LOG_DUMP</span>
-          <div style={{fontSize: '0.6rem', color: '#64748b', fontFamily: 'var(--font-mono)', lineHeight: '1.4'}}>
-            {`> kernel: boot secure
-> auth: jwt_valid
-> node_04: online
-> ai_engine: ready
-> socket: connected
-> buffer: clear
-> cluster: healthy`}
+        <TelemetryNode label="DATABASE_NODES" value="12,402" subValue="↑ SYNC_STABLE" icon={Server} />
+        <TelemetryNode label="ACTIVE_SESSIONS" value="142" subValue="↑ +12% PEAK" icon={Activity} />
+        <TelemetryNode label="AI_CORES" value="138" subValue="● THREAD_SAFE" icon={Brain} />
+
+        {/* System Log */}
+        <div className={`${styles.tacticalPanel} ${styles.systemLog}`}>
+          <div className={styles.panelGlow} />
+          <div className={styles.cardHeader}>
+            <h3>System Log</h3>
+          </div>
+          <div className={styles.logContent}>
+            {[
+              { text: '> kernel: boot secure', cls: 'ok' },
+              { text: '> auth: jwt_valid', cls: 'ok' },
+              { text: '> node_04: online', cls: 'info' },
+              { text: '> ai_engine: ready', cls: 'ok' },
+              { text: '> socket: connected', cls: 'info' },
+              { text: '> buffer: clear', cls: 'ok' },
+              { text: '> cluster: healthy', cls: 'ok' },
+            ].map((l, i) => (
+              <div
+                key={i}
+                className={`${styles.logLine} ${styles[l.cls]}`}
+                style={{ animationDelay: `${i * 0.1}s` }}
+              >
+                {l.text}
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Column 2: Operations Map & Primary Data */}
+      {/* Center: Chart + Table */}
       <div className={styles.centerColumn}>
         <div className={`${styles.tacticalPanel} ${styles.chartCard}`}>
+          <div className={styles.panelGlow} />
           <div className={styles.cardHeader}>
-            <h3>NEURAL_ACTIVITY_MATRIX</h3>
-            <div style={{display: 'flex', gap: '10px'}}>
-              <div style={{width: '6px', height: '6px', borderRadius: '50%', background: '#8b5cf6'}}></div>
-              <div style={{width: '6px', height: '6px', borderRadius: '50%', background: '#ec4899'}}></div>
+            <h3>Neural Activity Matrix</h3>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', fontFamily: 'var(--font-mono)', fontSize: '0.6rem' }}>
+              <span style={{ color: 'var(--cyan)' }}>● Calls</span>
+              <span style={{ color: 'var(--electric)', opacity: 0.7 }}>● Follow-ups</span>
             </div>
           </div>
-          <ResponsiveContainer width="100%" height="90%">
-            <AreaChart data={CHART_DATA}>
+          <ResponsiveContainer width="100%" height="86%">
+            <AreaChart data={CHART_DATA} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>
               <defs>
-                <linearGradient id="glowViolet" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4}/>
-                  <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                <linearGradient id="gCyan" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#00D4FF" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#00D4FF" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="gElectric" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#4F8EF7" stopOpacity={0.12} />
+                  <stop offset="95%" stopColor="#4F8EF7" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="2 2" stroke="rgba(139, 92, 246, 0.1)" vertical={false} />
+              <CartesianGrid strokeDasharray="2 6" stroke="rgba(0, 212, 255, 0.06)" vertical={false} />
               <XAxis dataKey="name" hide />
               <YAxis hide />
-              <Tooltip contentStyle={{background: '#010103', border: '1px solid #8b5cf6', fontSize: '10px'}} />
-              <Area type="stepAfter" dataKey="calls" stroke="#8b5cf6" fill="url(#glowViolet)" strokeWidth={2} />
-              <Area type="monotone" dataKey="followups" stroke="#ec4899" fill="transparent" strokeWidth={1} strokeDasharray="5 5" />
+              <Tooltip content={<CustomTooltip />} />
+              <Area type="monotone" dataKey="calls" stroke="#00D4FF" strokeWidth={1.5} fill="url(#gCyan)" dot={false} />
+              <Area type="monotone" dataKey="followups" stroke="#4F8EF7" strokeWidth={1.5} fill="url(#gElectric)" dot={false} strokeDasharray="5 4" />
             </AreaChart>
           </ResponsiveContainer>
         </div>
 
         <div className={`${styles.tacticalPanel} ${styles.tableCard}`}>
+          <div className={styles.panelGlow} />
           <div className={styles.cardHeader}>
-            <h3>DATA_SET_RECORDS</h3>
+            <h3>Lead Records</h3>
             <div className={styles.searchBar}>
-              <Search size={12} />
-              <input type="text" placeholder="FILTER_RECORDS..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+              <Search size={11} />
+              <input
+                type="text"
+                placeholder="Filter..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
           </div>
           <table className={styles.table}>
             <thead>
               <tr>
                 <th>ID</th>
-                <th>ENITY_NAME</th>
-                <th>STATUS_FLAG</th>
-                <th>TRACE</th>
+                <th>Name</th>
+                <th>Status</th>
+                <th>→</th>
               </tr>
             </thead>
             <tbody>
               {filteredLeads.slice(0, 5).map(lead => (
-                <tr key={lead.id} style={{cursor: 'pointer'}} onClick={() => setSelectedLead(lead)}>
-                  <td style={{color: '#8b5cf6', fontSize: '0.6rem'}}>#{lead.id}</td>
-                  <td style={{color: '#fff', fontWeight: 600}}>{lead.name}</td>
+                <tr key={lead.id} style={{ cursor: 'pointer' }} onClick={() => setSelectedLead(lead)}>
+                  <td style={{ color: 'var(--cyan)', fontFamily: 'var(--font-mono)', fontSize: '0.65rem' }}>#{lead.id}</td>
+                  <td style={{ color: 'var(--text-bright)', fontWeight: 600 }}>{lead.name}</td>
                   <td>
-                    <span className={`${styles.statusBadge} ${styles[lead.status]}`}>
-                      {lead.status}
-                    </span>
+                    <span className={`${styles.statusBadge} ${styles[lead.status]}`}>{lead.status}</span>
                   </td>
-                  <td><ArrowUpRight size={12} opacity={0.3} /></td>
+                  <td><ArrowUpRight size={13} color="var(--text-dim)" /></td>
                 </tr>
               ))}
             </tbody>
@@ -172,66 +208,113 @@ const Dashboard = ({ onBackToLanding }) => {
         </div>
       </div>
 
-      {/* Column 3: Pulse & Interactions */}
+      {/* Right: Activity + Mini Panel */}
       <div className={styles.rightColumn}>
         <div className={`${styles.tacticalPanel} ${styles.activityCard}`}>
+          <div className={styles.panelGlow} />
           <div className={styles.cardHeader}>
-            <h3>REAL_TIME_PULSE</h3>
-            <div style={{fontSize: '0.5rem', color: '#10B981'}}>● LIVE_SYNC</div>
+            <h3>Real-Time Pulse</h3>
+            <div className={styles.liveIndicator}>
+              <span className={`${styles.liveDot} glow-dot`} />
+              LIVE
+            </div>
           </div>
           <div className={styles.activityList}>
             {ACTIVITY.map(item => (
               <div key={item.id} className={styles.activityItem}>
-                <div className={styles.activityDot}></div>
+                <div className={styles.activityDot} />
                 <div className={styles.activityContent}>
-                  <p style={{fontSize: '0.7rem', color: '#fff'}}>{item.msg.toUpperCase()}</p>
-                  <span style={{fontSize: '0.55rem', opacity: 0.4}}>{item.time} // TRACE_OK</span>
+                  <p>{item.msg}</p>
+                  <span>{item.time} — TRACE_OK</span>
                 </div>
               </div>
             ))}
           </div>
         </div>
-        <div className={styles.tacticalPanel} style={{height: '150px', background: 'repeating-linear-gradient(45deg, rgba(139, 92, 246, 0.02) 0px, rgba(139, 92, 246, 0.02) 2px, transparent 2px, transparent 4px)'}}>
-          <div style={{padding: '20px', textAlign: 'center'}}>
-            <Cpu size={32} color="#8b5cf6" opacity={0.2} style={{animation: 'dataPulse 2s infinite'}} />
-            <div style={{fontSize: '0.6rem', letterSpacing: '0.2em', marginTop: '10px'}}>SECURITY_KERNEL_V4</div>
+
+        <div className={`${styles.tacticalPanel} ${styles.miniPanel}`}>
+          <div className={styles.panelGlow} />
+          <Cpu size={28} color="var(--cyan)" style={{ opacity: 0.3, animation: 'dataPulse 2.5s ease-in-out infinite' }} />
+          <div style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: '0.6rem',
+            letterSpacing: '0.15em',
+            color: 'var(--text-dim)',
+            textAlign: 'center',
+            lineHeight: 1.8
+          }}>
+            SECURITY<br />KERNEL_V4
           </div>
         </div>
       </div>
     </>
   );
 
+  // ─── Leads View ─────────────────────────────────────────────────────────────
   const renderLeads = () => (
     <div className={styles.fullView}>
-      <div className={styles.cardHeader}>
-        <h2 style={{fontSize: '1rem', letterSpacing: '0.1em', color: 'white'}}>LEAD_INVENTORY_ROOT</h2>
-        <button style={{background: '#8b5cf6', padding: '8px 16px', borderRadius: '8px', border: 'none', color: 'white', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: '0.7rem'}}><Plus size={14} /> ADD_ENTRY</button>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <div>
+          <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-bright)', letterSpacing: '-0.02em' }}>
+            Lead Inventory
+          </h2>
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'var(--text-dim)', marginTop: '4px' }}>
+            {filteredLeads.length} records found
+          </p>
+        </div>
+        <button style={{
+          display: 'flex', alignItems: 'center', gap: '7px',
+          background: 'linear-gradient(135deg, var(--cyan), var(--electric))',
+          color: 'var(--bg-void)', padding: '10px 18px', borderRadius: '10px',
+          border: 'none', fontFamily: 'var(--font-display)', fontSize: '0.8rem',
+          fontWeight: 700, cursor: 'pointer',
+        }}>
+          <Plus size={14} /> Add Lead
+        </button>
       </div>
-      <div className={styles.tacticalPanel} style={{padding: '24px'}}>
+
+      <div className={styles.tacticalPanel} style={{ padding: '24px' }}>
+        <div className={styles.panelGlow} />
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>IDENTIFIER</th>
-              <th>CONTACT_DATA</th>
-              <th>STATUS</th>
-              <th>AI_SUMMARY_HASH</th>
-              <th>ACTION</th>
+              <th>ID</th>
+              <th>Contact</th>
+              <th>Status</th>
+              <th>AI Summary</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
             {filteredLeads.map(lead => (
               <tr key={lead.id}>
-                <td style={{color: '#8b5cf6'}}>#{lead.id}</td>
-                <td style={{color: '#fff'}}>{lead.name}<br/><span style={{fontSize: '0.65rem', opacity: 0.5}}>{lead.phone}</span></td>
+                <td style={{ color: 'var(--cyan)', fontFamily: 'var(--font-mono)', fontSize: '0.65rem' }}>#{lead.id}</td>
                 <td>
-                  <span className={`${styles.statusBadge} ${styles[lead.status]}`}>
-                    {lead.status}
-                  </span>
+                  <div style={{ color: 'var(--text-bright)', fontWeight: 600, fontSize: '0.85rem' }}>{lead.name}</div>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.62rem', color: 'var(--text-dim)', marginTop: '2px' }}>{lead.phone}</div>
                 </td>
-                <td><div style={{maxWidth: '400px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', opacity: 0.6, fontSize: '0.7rem'}}>{lead.summary}</div></td>
                 <td>
-                  <button style={{background: 'transparent', border: '1px solid rgba(139,92,246,0.3)', padding: '6px 12px', borderRadius: '4px', color: '#8b5cf6', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.6rem'}} onClick={() => setSelectedLead(lead)}>
-                    <Eye size={12} /> OPEN
+                  <span className={`${styles.statusBadge} ${styles[lead.status]}`}>{lead.status}</span>
+                </td>
+                <td>
+                  <div style={{ maxWidth: '380px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--text-main)', fontSize: '0.78rem' }}>
+                    {lead.summary}
+                  </div>
+                </td>
+                <td>
+                  <button
+                    onClick={() => setSelectedLead(lead)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '6px',
+                      background: 'transparent', border: '1px solid rgba(0, 212, 255, 0.2)',
+                      borderRadius: '6px', padding: '6px 12px', color: 'var(--cyan)',
+                      fontFamily: 'var(--font-mono)', fontSize: '0.65rem', cursor: 'pointer',
+                      transition: 'background 0.2s',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,212,255,0.06)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <Eye size={11} /> View
                   </button>
                 </td>
               </tr>
@@ -242,116 +325,123 @@ const Dashboard = ({ onBackToLanding }) => {
     </div>
   );
 
+  // ─── Docs View ──────────────────────────────────────────────────────────────
   const renderDocs = () => (
     <div className={styles.fullView}>
-      <h2 style={{color: 'white', marginBottom: '30px'}}>API_INTERFACE_SPECIFICATIONS</h2>
-      <div className={styles.leadDetailGrid}>
-        <div className={styles.tacticalPanel} style={{padding: '30px'}}>
-           <div style={{color: '#10B981', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', marginBottom: '10px'}}>POST /v1/dispatch/calls</div>
-           <p style={{fontSize: '0.8rem', marginBottom: '20px'}}>Initialize a new neural call session and queue for AI summarization.</p>
-           <pre style={{background: '#000', padding: '20px', borderRadius: '8px', border: '1px solid #1a1a2e', fontSize: '0.7rem'}}>
+      <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-bright)', marginBottom: '24px', letterSpacing: '-0.02em' }}>
+        API Specifications
+      </h2>
+      <div className={styles.docsGrid}>
+        <div className={styles.tacticalPanel} style={{ padding: '32px' }}>
+          <div className={styles.panelGlow} />
+          <div className={styles.endpointMethod}>POST /v1/dispatch/calls</div>
+          <p style={{ fontSize: '0.875rem', color: 'var(--text-main)', marginBottom: '16px', lineHeight: 1.7 }}>
+            Initialize a new call session and queue it for AI summarization.
+          </p>
+          <pre className={styles.codeSnippet}>
 {`{
   "caller": "+1-555-0102",
   "priority": "high",
   "stream_url": "wss://pulse.io/live"
 }`}
-           </pre>
+          </pre>
         </div>
-        <div className={styles.tacticalPanel} style={{padding: '30px'}}>
-          <h3 style={{fontSize: '0.7rem', marginBottom: '20px'}}>AUTHENTICATION</h3>
-          <p style={{fontSize: '0.7rem', opacity: 0.6}}>All requests must include a Bearer JWT in the authorization header.</p>
+        <div className={styles.tacticalPanel} style={{ padding: '32px' }}>
+          <div className={styles.panelGlow} />
+          <h3 style={{ fontSize: '0.85rem', color: 'var(--text-bright)', marginBottom: '16px', fontWeight: 600 }}>
+            Authentication
+          </h3>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-main)', lineHeight: 1.7 }}>
+            All requests must include a Bearer JWT in the <code style={{ color: 'var(--cyan)', fontFamily: 'var(--font-mono)', fontSize: '0.8rem' }}>Authorization</code> header.
+          </p>
         </div>
       </div>
     </div>
   );
 
+  // ─── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className={styles.container}>
-      <div className={styles.nebula}></div>
-      <div className={styles.gridOverlay}></div>
+      <div className={styles.nebula} />
+      <div className={styles.gridOverlay} />
 
+      {/* Command Dock */}
       <nav className={styles.commandDock}>
-        <button 
-          className={`${styles.navItem} ${activeTab === 'Overview' && !selectedLead ? styles.active : ''}`} 
-          onClick={() => {setActiveTab('Overview'); setSelectedLead(null);}}
-          title="Telemetry Overview"
+        <button
+          className={`${styles.navItem} ${activeTab === 'Overview' && !selectedLead ? styles.active : ''}`}
+          onClick={() => { setActiveTab('Overview'); setSelectedLead(null); }}
+          title="Overview"
         >
-          <LayoutDashboard size={20} />
+          <LayoutDashboard size={19} />
         </button>
-        <button 
-          className={`${styles.navItem} ${activeTab === 'Leads' || selectedLead ? styles.active : ''}`} 
-          onClick={() => {setActiveTab('Leads'); setSelectedLead(null);}}
-          title="Data Inventory"
+        <button
+          className={`${styles.navItem} ${(activeTab === 'Leads' || selectedLead) ? styles.active : ''}`}
+          onClick={() => { setActiveTab('Leads'); setSelectedLead(null); }}
+          title="Leads"
         >
-          <Users size={20} />
+          <Users size={19} />
         </button>
-        <button 
-          className={`${styles.navItem} ${activeTab === 'Docs' ? styles.active : ''}`} 
-          onClick={() => {setActiveTab('Docs'); setSelectedLead(null);}}
-          title="Interface Spec"
+        <button
+          className={`${styles.navItem} ${activeTab === 'Docs' ? styles.active : ''}`}
+          onClick={() => { setActiveTab('Docs'); setSelectedLead(null); }}
+          title="API Docs"
         >
-          <BookOpen size={20} />
+          <BookOpen size={19} />
         </button>
-        <div style={{width: '1px', background: 'rgba(255,255,255,0.1)', height: '24px', margin: '0 4px'}}></div>
-        <button className={styles.navItem} onClick={onBackToLanding} title="Back to Home">
-          <Home size={20} color="#06B6D4" />
+        <div className={styles.navDivider} />
+        <button className={styles.navItem} onClick={onBackToLanding} title="Back Home">
+          <Home size={19} color="var(--cyan)" />
         </button>
         <button className={styles.navItem} onClick={handleSignOut} title="Sign Out">
-          <LogOut size={20} color="#EF4444" />
+          <LogOut size={19} color="var(--rose)" />
         </button>
       </nav>
-      
+
+      {/* Main */}
       <main className={styles.mainContent}>
+        {/* Header */}
         <header className={styles.header}>
           <div className={styles.headerLeft}>
-            <h1>SYSTEM_TERMINAL::LEADPULSE_OS</h1>
-            <p style={{fontSize: '0.6rem', color: '#64748b'}}>NODE: 04 // STATUS: SECURE // {activeTab.toUpperCase()}</p>
+            <h1>LeadPulse OS // Terminal</h1>
+            <p>NODE:04 — STATUS:SECURE — {selectedLead ? 'LEAD_DETAIL' : activeTab.toUpperCase()}</p>
           </div>
-          <div style={{display: 'flex', gap: '16px', alignItems: 'center'}}>
-            <button
-              onClick={onBackToLanding}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                background: 'rgba(6,182,212,0.1)',
-                border: '1px solid rgba(6,182,212,0.5)',
-                borderRadius: '8px',
-                padding: '8px 16px',
-                color: '#06B6D4',
-                fontFamily: 'var(--font-mono)',
-                fontSize: '0.7rem',
-                fontWeight: '700',
-                letterSpacing: '0.1em',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background='rgba(6,182,212,0.25)'; e.currentTarget.style.boxShadow='0 0 20px rgba(6,182,212,0.3)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background='rgba(6,182,212,0.1)'; e.currentTarget.style.boxShadow='none'; }}
-            >
-              <Home size={14} /> ← HOME
+          <div className={styles.headerRight}>
+            <div className={styles.liveIndicator}>
+              <span className={`${styles.liveDot} glow-dot`} />
+              Session Active
+            </div>
+            <button className={styles.homeBtn} onClick={onBackToLanding}>
+              <Home size={12} /> Home
             </button>
-            <div style={{fontFamily: 'var(--font-mono)', fontSize: '0.6rem', color: '#8b5cf6'}}>AUTH::SESSION_ACTIVE</div>
-            <div style={{width: '32px', height: '32px', borderRadius: '50%', background: '#8b5cf6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 'bold', color: '#fff'}}>JD</div>
+            <div className={styles.userAvatar}>JD</div>
           </div>
         </header>
-        
+
+        {/* Content */}
         {selectedLead ? (
           <div className={styles.fullView}>
             <button className={styles.backBtn} onClick={() => setSelectedLead(null)}>
-              <ArrowLeft size={12} /> RETURN_TO_CLUSTER
+              <ArrowLeft size={12} /> Back to List
             </button>
             <div className={styles.leadDetailGrid}>
-              <div className={styles.tacticalPanel} style={{padding: '40px'}}>
-                <h2 style={{color: '#fff', fontSize: '2rem', marginBottom: '10px'}}>{selectedLead.name}</h2>
-                <p style={{color: '#8b5cf6', fontSize: '0.7rem', marginBottom: '30px'}}>{selectedLead.phone} // ENCRYPTED_LINK</p>
+              <div className={styles.tacticalPanel} style={{ padding: '40px' }}>
+                <div className={styles.panelGlow} />
+                <h2 style={{ fontSize: '1.8rem', fontWeight: 700, color: 'var(--text-bright)', marginBottom: '6px', letterSpacing: '-0.04em' }}>
+                  {selectedLead.name}
+                </h2>
+                <p style={{ fontFamily: 'var(--font-mono)', color: 'var(--cyan)', fontSize: '0.72rem', marginBottom: '28px', opacity: 0.8 }}>
+                  {selectedLead.phone} — ENCRYPTED_LINK
+                </p>
                 <div className={styles.aiFullText}>{selectedLead.summary}</div>
               </div>
-              <div className={styles.tacticalPanel} style={{padding: '30px'}}>
-                <h3 style={{fontSize: '0.7rem', letterSpacing: '0.1em', marginBottom: '20px'}}>SESSION_ACTIONS</h3>
-                <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
-                   <button style={{background: '#8b5cf6', color: '#fff', border: 'none', padding: '12px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 'bold', cursor: 'pointer'}}>COMMIT_CONVERSION</button>
-                   <button style={{background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', padding: '12px', borderRadius: '4px', fontSize: '0.7rem', cursor: 'pointer'}}>SCHEDULE_TASK</button>
+              <div className={styles.tacticalPanel} style={{ padding: '32px' }}>
+                <div className={styles.panelGlow} />
+                <h3 style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--text-dim)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '20px' }}>
+                  Actions
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <button className={styles.actionBtn}>Commit Conversion</button>
+                  <button className={styles.actionBtnSecondary}>Schedule Follow-up</button>
                 </div>
               </div>
             </div>

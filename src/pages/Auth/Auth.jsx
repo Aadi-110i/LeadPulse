@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Mail, 
-  Lock, 
-  Globe, 
-  ArrowRight, 
-  Loader2, 
-  Terminal, 
-  Fingerprint, 
-  ShieldCheck, 
+import {
+  Mail,
+  Lock,
+  Globe,
+  ArrowRight,
+  Loader2,
+  Terminal,
+  Fingerprint,
+  ShieldCheck,
   Cpu,
   ArrowLeft
 } from 'lucide-react';
 import styles from './Auth.module.css';
 
 import { auth } from '../../firebase';
-import { 
-  signInWithEmailAndPassword, 
+import {
+  signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup
@@ -29,7 +29,7 @@ const Auth = ({ onAuthSuccess, onBack }) => {
   const [error, setError] = useState('');
   const [logs, setLogs] = useState(['> INITIALIZING SECURE PROTOCOL...']);
 
-  // Simulate scrolling terminal logs
+  // Terminal log simulation
   useEffect(() => {
     if (isProcessing) {
       const messages = [
@@ -56,28 +56,23 @@ const Auth = ({ onAuthSuccess, onBack }) => {
     e.preventDefault();
     setIsProcessing(true);
     setError('');
-    
     try {
       if (isLogin) {
         await signInWithEmailAndPassword(auth, email, password);
       } else {
         await createUserWithEmailAndPassword(auth, email, password);
       }
-      
-      // onAuthSuccess will be called by App.jsx listener usually, 
-      // but we'll trigger it here for faster UI response after the log simulation
       setTimeout(() => {
         setIsProcessing(false);
         onAuthSuccess();
       }, 2000);
-
     } catch (err) {
       setIsProcessing(false);
       let friendlyError = 'Authentication failed';
       if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
         friendlyError = 'Invalid email or access key.';
       } else if (err.code === 'auth/email-already-in-use') {
-        friendlyError = 'This node is already registered.';
+        friendlyError = 'This account already exists.';
       } else if (err.code === 'auth/weak-password') {
         friendlyError = 'Access key must be at least 6 characters.';
       }
@@ -98,149 +93,163 @@ const Auth = ({ onAuthSuccess, onBack }) => {
       }, 2000);
     } catch (err) {
       setIsProcessing(false);
-      setError('Cloud Auth failed.');
+      setError('Cloud auth failed. Please try again.');
       setLogs(prev => [...prev.slice(-4), '> ERROR: CLOUD_AUTH_REJECTED']);
     }
   };
 
   return (
     <div className={styles.portalWrapper}>
-      {/* Immersive Background Elements */}
-      <div className={styles.nebula}></div>
-      <div className={styles.gridOverlay}></div>
-      <div className={styles.scanner}></div>
-      
-      {/* HUD Telemetry Elements */}
-      <div className={styles.hudTopRight}>
-        <div className={styles.hudLine}>SYSTEM_UPTIME: 142:08:12:44</div>
-        <div className={styles.hudLine}>LATENCY: 12ms</div>
-        <div className={styles.hudLine}>ENCRYPTION: ACTIVE</div>
-      </div>
+      {/* Background Layers */}
+      <div className={styles.nebula} />
+      <div className={styles.gridOverlay} />
+      <div className={styles.scanner} />
+      <div className={styles.backgroundWatermark}>LEADPULSE</div>
 
-      <div className={styles.hudBottomLeft}>
-        <div className={styles.hudLine}>NODE_ID: LP_CLUSTER_04</div>
-        <div className={styles.hudLine}>COORDS: 40.7128° N, 74.0060° W</div>
-      </div>
-
-      <div className={styles.backgroundWatermark}>LEADPULSE_V4</div>
-
-      {/* Floating Data Particles */}
+      {/* Floating Particles */}
       <div className={styles.particles}>
-        {[...Array(20)].map((_, i) => (
-          <div 
-            key={i} 
-            className={styles.particle} 
-            style={{ 
-              left: `${Math.random() * 100}%`, 
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 5}s`,
-              opacity: Math.random() * 0.5 + 0.2
+        {[...Array(18)].map((_, i) => (
+          <div
+            key={i}
+            className={styles.particle}
+            style={{
+              left: `${(i * 5.5 + 5) % 100}%`,
+              top: `${(i * 7 + 10) % 100}%`,
+              animationDelay: `${(i * 0.4) % 5}s`,
+              animationDuration: `${10 + (i % 5) * 2}s`,
+              opacity: 0.2 + (i % 5) * 0.08,
             }}
-          ></div>
+          />
         ))}
       </div>
 
+      {/* HUD */}
+      <div className={styles.hudTopRight}>
+        <div>SYSTEM_UPTIME: 142:08:12:44</div>
+        <div>LATENCY: 12ms</div>
+        <div>ENCRYPTION: AES-256</div>
+      </div>
+      <div className={styles.hudBottomLeft}>
+        <div>NODE_ID: LP_CLUSTER_04</div>
+        <div>COORDS: 40.7128°N, 74.0060°W</div>
+      </div>
+
+      {/* Back Button */}
       <button className={styles.backButton} onClick={onBack} disabled={isProcessing}>
-        <ArrowLeft size={16} /> EXIT_TO_SYSTEM
+        <ArrowLeft size={14} /> Exit Portal
       </button>
-      
+
+      {/* Central Content */}
       <div className={styles.centralHub}>
-        {/* Decorative Pulse Rings */}
-        <div className={styles.pulseRing}></div>
-        <div className={styles.pulseRing} style={{ animationDelay: '1s', width: '600px', height: '600px' }}></div>
+        {/* Pulse Rings */}
+        <div className={styles.pulseRing} />
+        <div className={styles.pulseRing} style={{ animationDelay: '2s', width: '900px', height: '900px' }} />
 
         <div className={styles.splitLayout}>
+          {/* Auth Card */}
           <div className={styles.glassCard}>
-            <div className={styles.cardGlow}></div>
-            
-            <div className={styles.header}>
+            <div className={styles.cardGlowTop} />
+            <div className={styles.cardGlowLeft} />
+            <div className="corner-tl" />
+            <div className="corner-br" />
+
+            <div className={styles.authHeader}>
               <div className={styles.authLogo}>
-                <Fingerprint size={32} color="var(--violet)" />
-                <div className={styles.logoAura}></div>
+                <div className={styles.logoAura} />
+                <Fingerprint size={24} color="var(--cyan)" />
               </div>
-              <h1>{isLogin ? 'LeadPulse Access' : 'Create Node'}</h1>
+              <h1>{isLogin ? 'LeadPulse Access' : 'Create Account'}</h1>
               <p className={styles.subtitle}>
-                {isLogin ? 'Authentication required' : 'Initialize your engine'}
+                {isLogin ? 'Authentication required' : 'Initialize your node'}
               </p>
             </div>
 
             <form className={styles.form} onSubmit={handleSubmit}>
               <div className={styles.inputField}>
-                <div className={styles.inputIcon}><Mail size={18} /></div>
-                <input 
-                  type="email" 
-                  placeholder="Developer Email" 
-                  required 
+                <div className={styles.inputIcon}><Mail size={16} /></div>
+                <input
+                  type="email"
+                  placeholder="Developer email"
+                  required
                   disabled={isProcessing}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
                 />
-                <div className={styles.inputTrace}></div>
+                <div className={styles.inputTrace} />
               </div>
 
               <div className={styles.inputField}>
-                <div className={styles.inputIcon}><Lock size={18} /></div>
-                <input 
-                  type="password" 
-                  placeholder="Access Key" 
-                  required 
+                <div className={styles.inputIcon}><Lock size={16} /></div>
+                <input
+                  type="password"
+                  placeholder="Access key"
+                  required
                   disabled={isProcessing}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  autoComplete={isLogin ? 'current-password' : 'new-password'}
                 />
-                <div className={styles.inputTrace}></div>
+                <div className={styles.inputTrace} />
               </div>
 
               {error && <div className={styles.errorMessage}>{error}</div>}
 
               <button type="submit" className={styles.portalBtn} disabled={isProcessing}>
                 <span className={styles.btnText}>
-                  {isProcessing ? 'SYNCHRONIZING...' : isLogin ? 'INITIATE SESSION' : 'INITIALIZE API'}
+                  {isProcessing ? 'Synchronizing...' : isLogin ? 'Initiate Session' : 'Initialize API'}
                 </span>
                 {isProcessing ? (
-                  <Loader2 size={20} className={styles.spin} />
+                  <Loader2 size={18} className={styles.spin} />
                 ) : (
-                  <ArrowRight size={20} className={styles.arrow} />
+                  <ArrowRight size={18} className={styles.arrow} />
                 )}
               </button>
             </form>
 
             <div className={styles.metaActions}>
-              <button 
-                className={styles.toggleBtn} 
-                onClick={() => setIsLogin(!isLogin)}
+              <button
+                className={styles.toggleBtn}
+                onClick={() => { setIsLogin(!isLogin); setError(''); }}
                 disabled={isProcessing}
               >
-                {isLogin ? 'NEW_ACCOUNT.SH' : 'EXISTING_USER.LOG'}
+                {isLogin ? 'Create Account' : 'Sign In Instead'}
               </button>
-              <div className={styles.separator}></div>
-              <button 
-                className={styles.googleAccess} 
+              <div className={styles.separator} />
+              <button
+                className={styles.googleAccess}
                 onClick={handleGoogleAuth}
                 disabled={isProcessing}
               >
-                <Globe size={16} /> CLOUD_AUTH
+                <Globe size={14} /> Cloud Auth
               </button>
             </div>
           </div>
 
+          {/* Side Panel */}
           <div className={styles.sidePanel}>
-            {/* Live Terminal Widget */}
-            <div className={`${styles.terminalWidget} glass-panel`}>
+            {/* Live Terminal */}
+            <div className={styles.terminalWidget}>
               <div className={styles.termHeader}>
-                <Terminal size={14} /> <span>AUTH_LOG.STREAM</span>
+                <Terminal size={13} />
+                <span>Auth Log Stream</span>
+                <div className={styles.termDots}>
+                  <span /><span /><span />
+                </div>
               </div>
               <div className={styles.termBody}>
                 {logs.map((log, i) => (
-                  <div key={i} className={styles.logLine}>{log}</div>
+                  <div key={i} className={styles.logLine} style={{ animationDelay: `${i * 0.05}s` }}>
+                    {log}
+                  </div>
                 ))}
               </div>
             </div>
 
             {/* Tech Badges */}
             <div className={styles.techCluster}>
-              <div className={styles.techBadge}><Cpu size={14} /> AI_ENGINE_V4</div>
-              <div className={styles.techBadge}><ShieldCheck size={14} /> AES_256</div>
+              <div className={styles.techBadge}><Cpu size={12} /> AI Engine V4</div>
+              <div className={styles.techBadge}><ShieldCheck size={12} /> AES-256</div>
             </div>
           </div>
         </div>
