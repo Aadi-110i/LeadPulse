@@ -157,28 +157,7 @@ npm run dev
 npm run worker
 ```
 
----
 
-## 📁 Project Structure
-leadpulse/
-├── src/
-│   ├── routes/          # Express route handlers
-│   │   ├── calls.js
-│   │   ├── leads.js
-│   │   └── stats.js
-│   ├── services/        # Business logic
-│   │   ├── llmService.js       # OpenAI integration
-│   │   ├── whatsappService.js  # Twilio/Meta webhook
-│   │   └── queueService.js     # BullMQ job management
-│   ├── workers/         # Background job processors
-│   │   └── followupWorker.js
-│   ├── models/          # PostgreSQL query helpers
-│   └── middleware/      # Auth, logging, error handling
-├── frontend/            # React dashboard
-├── .env.example
-└── README.md
-
----
 
 ## 🎯 Built For
 
