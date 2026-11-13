@@ -38,14 +38,14 @@ Most SMBs lose leads because they forget to follow up. LeadPulse fixes this by:
                 └──────────────┬──────────────────────┘
                                │ REST API calls
                 ┌──────────────▼──────────────────────┐
-                │         Express.js API Server        │
-                │  /api/calls  /api/leads  /api/logs   │
-                └───┬──────────────────┬───────────────┘
+                │         Express.js API Server       │
+                │  /api/calls  /api/leads  /api/logs  │
+                └───┬──────────────────┬──────────────┘
                     │                  │
        ┌────────────▼───┐     ┌────────▼──────────┐
-       │  PostgreSQL DB  │     │   Redis + BullMQ  │
-       │  Leads, Calls,  │     │   Job Queue for   │
-       │  Summaries      │     │   WhatsApp sends  │
+       │  PostgreSQL DB  │     │   Redis + BullMQ │
+       │  Leads, Calls,  │     │   Job Queue for  │
+       │  Summaries      │     │   WhatsApp sends │
        └────────────────┘     └────────┬──────────┘
                                        │
                 ┌──────────────────────▼──────────────┐
