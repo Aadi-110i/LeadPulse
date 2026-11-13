@@ -1,0 +1,161 @@
+/* ============================================================================
+   LeadPulse — design tokens
+   ----------------------------------------------------------------------------
+   Two surfaces, one vocabulary.
+
+     [data-surface="marketing"]  Paper Dispatch — cool white sheet, cobalt ink
+     [data-surface="app"]        Quiet Console  — graphite panel, brass accent
+
+   Every component styles itself from these variables. Nothing hard-codes a
+   colour, so an external stylesheet can retheme any surface by overriding a
+   token rather than fighting a selector.
+   ========================================================================== */
+
+:root {
+  /* --- Type families ---------------------------------------------------- */
+  --font-display: "Schibsted Grotesk", system-ui, -apple-system, sans-serif;
+  --font-sans: "Schibsted Grotesk", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* --- Type scale ------------------------------------------------------- */
+  --text-2xs: 0.6875rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-md: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.3125rem;
+  --text-2xl: clamp(1.6rem, 2.6vw, 2.125rem);
+  --text-3xl: clamp(2rem, 3.4vw, 2.75rem);
+  --text-display: clamp(2.6rem, 5.4vw, 4.25rem);
+  --text-display-sm: clamp(2.1rem, 4.2vw, 3.25rem);
+
+  --leading-tight: 1.04;
+  --leading-snug: 1.2;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
+
+  --tracking-display: -0.035em;
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-label: 0.06em;
+
+  /* --- Spacing scale ---------------------------------------------------- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  /* --- Geometry --------------------------------------------------------- */
+  --radius-xs: 5px;
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  /* --- Layout ----------------------------------------------------------- */
+  --shell-max: 1240px;
+  --measure: 68ch;
+  --header-height: 68px;
+
+  /* --- Motion ----------------------------------------------------------- */
+  --ease-out: cubic-bezier(0.16, 0.84, 0.44, 1);
+  --t-fast: 140ms;
+  --t-mid: 220ms;
+  --t-slow: 420ms;
+
+  /* --- Shared semantic status ------------------------------------------- */
+  --positive: #14713d;
+  --caution: #9a5b06;
+  --negative: #a8271c;
+}
+
+/* ==========================================================================
+   Marketing surface — "Paper Dispatch"
+   A cool white dispatch sheet. Hairlines do the structural work; cobalt is
+   the only accent.
+   ========================================================================== */
+[data-surface="marketing"] {
+  --font-display: "Familjen Grotesk", system-ui, -apple-system, sans-serif;
+  --font-sans: "Familjen Grotesk", system-ui, -apple-system, sans-serif;
+
+  --ground: #f1f3f6;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-sunken: #e9ecf1;
+  --surface-inset: #fafbfc;
+
+  --rule: #dee2e9;
+  --rule-soft: #e9ecf1;
+  --rule-strong: #c6ccd6;
+
+  --ink: #0c0f14;
+  --ink-muted: #5a6270;
+  --ink-faint: #8a92a0;
+  --ink-inverse: #f7f8fa;
+
+  --accent: #2b4ae0;
+  --accent-strong: #1e37b4;
+  --accent-wash: rgba(43, 74, 224, 0.08);
+  --accent-ink: #ffffff;
+
+  --positive: #14713d;
+  --positive-wash: rgba(20, 113, 61, 0.09);
+  --caution: #9a5b06;
+  --caution-wash: rgba(154, 91, 6, 0.1);
+  --negative: #a8271c;
+  --negative-wash: rgba(168, 39, 28, 0.08);
+
+  --shadow-1: 0 1px 2px rgba(12, 15, 20, 0.05);
+  --shadow-2: 0 12px 28px -18px rgba(12, 15, 20, 0.28);
+  --shadow-3: 0 24px 56px -28px rgba(12, 15, 20, 0.34);
+}
+
+/* ==========================================================================
+   App surface — "Quiet Console"
+   A graphite instrument panel. Brass is the single accent; mono appears only
+   where real data lives.
+   ========================================================================== */
+[data-surface="app"] {
+  --font-display: "Schibsted Grotesk", system-ui, -apple-system, sans-serif;
+  --font-sans: "Schibsted Grotesk", system-ui, -apple-system, sans-serif;
+
+  --ground: #0e1013;
+  --surface: #16191e;
+  --surface-raised: #1c2027;
+  --surface-sunken: #0a0c0f;
+  --surface-inset: #12151a;
+
+  --rule: #262b33;
+  --rule-soft: #1e2229;
+  --rule-strong: #363d47;
+
+  --ink: #edeff3;
+  --ink-muted: #98a1af;
+  --ink-faint: #6b7482;
+  --ink-inverse: #0e1013;
+
+  --accent: #e0a45e;
+  --accent-strong: #eeb372;
+  --accent-wash: rgba(224, 164, 94, 0.13);
+  --accent-ink: #17120b;
+
+  --positive: #6fbf8e;
+  --positive-wash: rgba(111, 191, 142, 0.13);
+  --caution: #d8a33f;
+  --caution-wash: rgba(216, 163, 63, 0.13);
+  --negative: #e0715f;
+  --negative-wash: rgba(224, 113, 95, 0.13);
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 16px 36px -24px rgba(0, 0, 0, 0.9);
+  --shadow-3: 0 32px 64px -32px rgba(0, 0, 0, 0.95);
+}
