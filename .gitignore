@@ -14,6 +14,17 @@ dist-ssr
 .env
 .env.*
 !.env.example
+!.env.*.example
+
+# Local scratch: database data dirs, redis dumps, dev logs, screenshots,
+# the bundled copy of the original site, and the WSL provisioning scripts.
+.data
+
+# Installed agent skills. These are third-party toolchain payloads, not app
+# code — skills-lock.json records what to install and where it came from.
+# .claude/skills entries are junctions into .agents/skills on Windows.
+.claude/skills
+.agents/skills
 
 # Editor directories and files
 .vscode/*
