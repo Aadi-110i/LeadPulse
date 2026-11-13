@@ -1,461 +1,312 @@
-import React, { useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
+import { Link, NavLink, useNavigate, useParams } from 'react-router-dom';
 import {
-  LayoutDashboard,
-  Users,
-  BookOpen,
   Activity,
-  ArrowUpRight,
-  Plus,
+  BarChart3,
+  Gauge,
+  Inbox,
   LogOut,
-  Eye,
-  ArrowLeft,
-  Brain,
-  Server,
-  Home,
-  Cpu,
-  Search
+  PhoneCall,
+  Radio,
+  RefreshCw,
+  Users,
 } from 'lucide-react';
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer
-} from 'recharts';
-import { LEADS, ACTIVITY } from '../../data/mockData';
-import { auth } from '../../firebase';
-import { signOut } from 'firebase/auth';
+import { useAuth } from '../../auth/AuthProvider';
+import { Button, Chip, Spinner } from '../../components/ui';
+import useDashboardData from './hooks/useDashboardData';
+import Overview from './sections/Overview';
+import Pipeline from './sections/Pipeline';
+import Calls from './sections/Calls';
+import Observability from './sections/Observability';
 import styles from './Dashboard.module.css';
 
-// ─── Chart Data ───────────────────────────────────────────────────────────────
-const CHART_DATA = [
-  { name: '00:00', calls: 400, followups: 240 },
-  { name: '04:00', calls: 300, followups: 139 },
-  { name: '08:00', calls: 600, followups: 980 },
-  { name: '12:00', calls: 800, followups: 390 },
-  { name: '16:00', calls: 500, followups: 480 },
-  { name: '20:00', calls: 900, followups: 380 },
-  { name: '23:59', calls: 700, followups: 430 },
+const SECTIONS = [
+  { id: 'overview', label: 'Overview', icon: Gauge, path: '/app' },
+  { id: 'pipeline', label: 'Pipeline', icon: Users, path: '/app/pipeline' },
+  { id: 'calls', label: 'Calls', icon: PhoneCall, path: '/app/calls' },
+  { id: 'observability', label: 'Observability', icon: BarChart3, path: '/app/observability' },
 ];
 
-// ─── Custom Tooltip ───────────────────────────────────────────────────────────
-const CustomTooltip = ({ active, payload, label }) => {
-  if (!active || !payload) return null;
+const ENDPOINTS = [
+  { method: 'GET', path: '/api/leads' },
+  { method: 'POST', path: '/api/calls' },
+  { method: 'PATCH', path: '/api/leads/{id}' },
+  { method: 'GET', path: '/api/stats' },
+  { method: 'GET', path: '/api/stats/observability' },
+];
+
+function timeAgo(date) {  if (!date) return '';
+  const seconds = Math.max(0, Math.round((Date.now() - new Date(date).getTime()) / 1000));
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.round(hours / 24)}d ago`;
+}
+
+export default function Dashboard() {
+  const { section = 'overview' } = useParams();
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+  const { stats, activity, observability, leads, loading, error, lastSync, refresh } =
+    useDashboardData();
+
+  const [refreshing, setRefreshing] = useState(false);
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    await refresh();
+    setRefreshing(false);
+  }
+
+  function handleSignOut() {
+    signOut();
+    navigate('/', { replace: true });
+  }
+
+  useEffect(() => {
+    if (!stats) return;
+    document.title = `LeadPulse — ${SECTIONS.find((s) => s.id === section)?.label ?? 'Dashboard'}`;
+  }, [stats, section]);
+
+  const deliveryRate = stats ? Math.round(stats.deliveryRate * 1000) / 10 : 0;
+
   return (
-    <div style={{
-      background: 'rgba(4, 8, 16, 0.95)',
-      border: '1px solid rgba(0, 212, 255, 0.2)',
-      borderRadius: '10px',
-      padding: '10px 14px',
-      fontFamily: 'var(--font-mono)',
-      fontSize: '0.7rem',
-    }}>
-      <div style={{ color: 'var(--text-dim)', marginBottom: '6px' }}>{label}</div>
-      {payload.map((p, i) => (
-        <div key={i} style={{ color: p.stroke, display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <span>{p.name}:</span>
-          <span style={{ color: '#fff', fontWeight: 700 }}>{p.value}</span>
+    <div className={styles.app} data-surface="app">
+      <header className={styles.header}>
+        <Link to="/" className={styles.brand}>
+          <span className={styles.brandMark} aria-hidden="true">
+            <span />
+          </span>
+          <span className={styles.brandName}>
+            Lead<em>Pulse</em>
+          </span>
+        </Link>
+
+        <nav className={styles.headerNav} aria-label="Dashboard sections">
+          {SECTIONS.map((item) => (
+            <NavLink
+              key={item.id}
+              to={item.path}
+              end={item.path === '/app'}
+              className={({ isActive }) =>
+                `${styles.headerLink} ${isActive ? styles['headerLink--active'] : ''}`
+              }
+            >
+              <item.icon size={15} aria-hidden="true" />
+              {item.label}
+            </NavLink>
+          ))}
+        </nav>
+
+        <div className={styles.headerRight}>
+          <span className={styles.session}>
+            <span className={styles.sessionDot} aria-hidden="true" />
+            Session active
+          </span>
+          <span className={styles.headerUser}>{user?.email}</span>
+          <button type="button" className={styles.iconButton} onClick={handleSignOut}>
+            <LogOut size={15} aria-hidden="true" />
+            <span className="visually-hidden">Sign out</span>
+          </button>
         </div>
-      ))}
-    </div>
-  );
-};
+      </header>
 
-// ─── KPI Card ─────────────────────────────────────────────────────────────────
-const TelemetryNode = ({ label, value, subValue, icon: Icon }) => (
-  <div className={`${styles.tacticalPanel} ${styles.kpiCard}`}>
-    <div className={styles.panelGlow} />
-    <div className={styles.kpiHeader}>
-      <Icon size={14} color="var(--cyan)" />
-      <span className={styles.kpiTag}>STREAM_ACTIVE</span>
-    </div>
-    <span className={styles.kpiLabel}>{label}</span>
-    <div className={styles.kpiValue}>{value}</div>
-    <div className={styles.kpiSubValue}>{subValue}</div>
-  </div>
-);
-
-// ─── Dashboard ────────────────────────────────────────────────────────────────
-const Dashboard = ({ onBackToLanding }) => {
-  const [activeTab, setActiveTab] = useState('Overview');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedLead, setSelectedLead] = useState(null);
-
-  const handleSignOut = async () => {
-    try {
-      await signOut(auth);
-      onBackToLanding();
-    } catch (error) {
-      console.error('Sign out error:', error);
-    }
-  };
-
-  const filteredLeads = useMemo(() => {
-    return LEADS.filter(lead =>
-      lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lead.summary.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [searchTerm]);
-
-  // ─── Overview ───────────────────────────────────────────────────────────────
-  const renderOverview = () => (
-    <>
-      {/* Left: KPI Telemetry */}
-      <div className={styles.leftColumn}>
-        <TelemetryNode label="DATABASE_NODES" value="12,402" subValue="↑ SYNC_STABLE" icon={Server} />
-        <TelemetryNode label="ACTIVE_SESSIONS" value="142" subValue="↑ +12% PEAK" icon={Activity} />
-        <TelemetryNode label="AI_CORES" value="138" subValue="● THREAD_SAFE" icon={Brain} />
-
-        {/* System Log */}
-        <div className={`${styles.tacticalPanel} ${styles.systemLog}`}>
-          <div className={styles.panelGlow} />
-          <div className={styles.cardHeader}>
-            <h3>System Log</h3>
-          </div>
-          <div className={styles.logContent}>
-            {[
-              { text: '> kernel: boot secure', cls: 'ok' },
-              { text: '> auth: jwt_valid', cls: 'ok' },
-              { text: '> node_04: online', cls: 'info' },
-              { text: '> ai_engine: ready', cls: 'ok' },
-              { text: '> socket: connected', cls: 'info' },
-              { text: '> buffer: clear', cls: 'ok' },
-              { text: '> cluster: healthy', cls: 'ok' },
-            ].map((l, i) => (
-              <div
-                key={i}
-                className={`${styles.logLine} ${styles[l.cls]}`}
-                style={{ animationDelay: `${i * 0.1}s` }}
-              >
-                {l.text}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Center: Chart + Table */}
-      <div className={styles.centerColumn}>
-        <div className={`${styles.tacticalPanel} ${styles.chartCard}`}>
-          <div className={styles.panelGlow} />
-          <div className={styles.cardHeader}>
-            <h3>Neural Activity Matrix</h3>
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', fontFamily: 'var(--font-mono)', fontSize: '0.6rem' }}>
-              <span style={{ color: 'var(--cyan)' }}>● Calls</span>
-              <span style={{ color: 'var(--electric)', opacity: 0.7 }}>● Follow-ups</span>
-            </div>
-          </div>
-          <ResponsiveContainer width="100%" height="86%">
-            <AreaChart data={CHART_DATA} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>
-              <defs>
-                <linearGradient id="gCyan" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#00D4FF" stopOpacity={0.25} />
-                  <stop offset="95%" stopColor="#00D4FF" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="gElectric" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#4F8EF7" stopOpacity={0.12} />
-                  <stop offset="95%" stopColor="#4F8EF7" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="2 6" stroke="rgba(0, 212, 255, 0.06)" vertical={false} />
-              <XAxis dataKey="name" hide />
-              <YAxis hide />
-              <Tooltip content={<CustomTooltip />} />
-              <Area type="monotone" dataKey="calls" stroke="#00D4FF" strokeWidth={1.5} fill="url(#gCyan)" dot={false} />
-              <Area type="monotone" dataKey="followups" stroke="#4F8EF7" strokeWidth={1.5} fill="url(#gElectric)" dot={false} strokeDasharray="5 4" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className={`${styles.tacticalPanel} ${styles.tableCard}`}>
-          <div className={styles.panelGlow} />
-          <div className={styles.cardHeader}>
-            <h3>Lead Records</h3>
-            <div className={styles.searchBar}>
-              <Search size={11} />
-              <input
-                type="text"
-                placeholder="Filter..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-          </div>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Status</th>
-                <th>→</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredLeads.slice(0, 5).map(lead => (
-                <tr key={lead.id} style={{ cursor: 'pointer' }} onClick={() => setSelectedLead(lead)}>
-                  <td style={{ color: 'var(--cyan)', fontFamily: 'var(--font-mono)', fontSize: '0.65rem' }}>#{lead.id}</td>
-                  <td style={{ color: 'var(--text-bright)', fontWeight: 600 }}>{lead.name}</td>
-                  <td>
-                    <span className={`${styles.statusBadge} ${styles[lead.status]}`}>{lead.status}</span>
-                  </td>
-                  <td><ArrowUpRight size={13} color="var(--text-dim)" /></td>
-                </tr>
+      <div className={styles.body}>
+        <aside className={styles.leftRail}>
+          <div className={styles.railBlock}>
+            <p className="micro">Endpoints</p>
+            <ul className={styles.endpointList}>
+              {ENDPOINTS.map((endpoint) => (
+                <li key={`${endpoint.method}-${endpoint.path}`}>
+                  <span className={styles.endpointMethod}>{endpoint.method}</span>
+                  <span className={styles.endpointPath}>{endpoint.path}</span>
+                </li>
               ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            </ul>
+          </div>
 
-      {/* Right: Activity + Mini Panel */}
-      <div className={styles.rightColumn}>
-        <div className={`${styles.tacticalPanel} ${styles.activityCard}`}>
-          <div className={styles.panelGlow} />
-          <div className={styles.cardHeader}>
-            <h3>Real-Time Pulse</h3>
-            <div className={styles.liveIndicator}>
-              <span className={`${styles.liveDot} glow-dot`} />
-              LIVE
+          <div className={styles.railBlock}>
+            <p className="micro">Queue</p>
+            <div className={styles.railStat}>
+              <span className={styles.railStatValue}>{stats?.queuedJobs ?? 0}</span>
+              <span className={styles.railStatLabel}>waiting</span>
+            </div>
+            <div className={styles.railStat}>
+              <span className={styles.railStatValue}>{stats?.failedJobs ?? 0}</span>
+              <span className={styles.railStatLabel}>failed</span>
+            </div>
+            <div className={styles.railStat}>
+              <span className={styles.railStatValue}>{deliveryRate}%</span>
+              <span className={styles.railStatLabel}>delivered</span>
             </div>
           </div>
-          <div className={styles.activityList}>
-            {ACTIVITY.map(item => (
-              <div key={item.id} className={styles.activityItem}>
-                <div className={styles.activityDot} />
-                <div className={styles.activityContent}>
-                  <p>{item.msg}</p>
-                  <span>{item.time} — TRACE_OK</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
 
-        <div className={`${styles.tacticalPanel} ${styles.miniPanel}`}>
-          <div className={styles.panelGlow} />
-          <Cpu size={28} color="var(--cyan)" style={{ opacity: 0.3, animation: 'dataPulse 2.5s ease-in-out infinite' }} />
-          <div style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: '0.6rem',
-            letterSpacing: '0.15em',
-            color: 'var(--text-dim)',
-            textAlign: 'center',
-            lineHeight: 1.8
-          }}>
-            SECURITY<br />KERNEL_V4
+          <div className={styles.railCta}>
+            <p className={styles.railCtaTitle}>Log a call</p>
+            <p className={styles.railCtaBody}>
+              Summarise it, score it and queue the follow-up in one request.
+            </p>
+            <Button to="/app/calls" variant="primary" size="sm" full>
+              <PhoneCall size={14} aria-hidden="true" />
+              Log a call
+            </Button>
           </div>
-        </div>
-      </div>
-    </>
-  );
 
-  // ─── Leads View ─────────────────────────────────────────────────────────────
-  const renderLeads = () => (
-    <div className={styles.fullView}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <div>
-          <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-bright)', letterSpacing: '-0.02em' }}>
-            Lead Inventory
-          </h2>
-          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'var(--text-dim)', marginTop: '4px' }}>
-            {filteredLeads.length} records found
+          <p className={styles.railSync}>
+            {lastSync ? `Synced ${timeAgo(lastSync)}` : 'Syncing…'}
           </p>
-        </div>
-        <button style={{
-          display: 'flex', alignItems: 'center', gap: '7px',
-          background: 'linear-gradient(135deg, var(--cyan), var(--electric))',
-          color: 'var(--bg-void)', padding: '10px 18px', borderRadius: '10px',
-          border: 'none', fontFamily: 'var(--font-display)', fontSize: '0.8rem',
-          fontWeight: 700, cursor: 'pointer',
-        }}>
-          <Plus size={14} /> Add Lead
-        </button>
-      </div>
+        </aside>
 
-      <div className={styles.tacticalPanel} style={{ padding: '24px' }}>
-        <div className={styles.panelGlow} />
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Contact</th>
-              <th>Status</th>
-              <th>AI Summary</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredLeads.map(lead => (
-              <tr key={lead.id}>
-                <td style={{ color: 'var(--cyan)', fontFamily: 'var(--font-mono)', fontSize: '0.65rem' }}>#{lead.id}</td>
-                <td>
-                  <div style={{ color: 'var(--text-bright)', fontWeight: 600, fontSize: '0.85rem' }}>{lead.name}</div>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.62rem', color: 'var(--text-dim)', marginTop: '2px' }}>{lead.phone}</div>
-                </td>
-                <td>
-                  <span className={`${styles.statusBadge} ${styles[lead.status]}`}>{lead.status}</span>
-                </td>
-                <td>
-                  <div style={{ maxWidth: '380px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--text-main)', fontSize: '0.78rem' }}>
-                    {lead.summary}
-                  </div>
-                </td>
-                <td>
-                  <button
-                    onClick={() => setSelectedLead(lead)}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: '6px',
-                      background: 'transparent', border: '1px solid rgba(0, 212, 255, 0.2)',
-                      borderRadius: '6px', padding: '6px 12px', color: 'var(--cyan)',
-                      fontFamily: 'var(--font-mono)', fontSize: '0.65rem', cursor: 'pointer',
-                      transition: 'background 0.2s',
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,212,255,0.06)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                  >
-                    <Eye size={11} /> View
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <main className={styles.main}>
+          <div className={styles.mainToolbar}>
+            <div>
+              <h1 className={styles.mainTitle}>
+                {SECTIONS.find((s) => s.id === section)?.label ?? 'Overview'}
+              </h1>
+              <p className={styles.mainSubtitle}>
+                {section === 'overview'
+                  ? 'Live pipeline state, straight from the database.'
+                  : section === 'pipeline'
+                    ? 'Every lead, searchable and sortable.'
+                    : section === 'calls'
+                      ? 'Call history and a place to log the next one.'
+                      : 'Queue depth, latency and delivery health.'}
+              </p>
+            </div>
+            <div className={styles.mainActions}>
+              <Button variant="secondary" size="sm" onClick={handleRefresh} disabled={refreshing}>
+                <RefreshCw size={14} className={refreshing ? styles.spinning : undefined} aria-hidden="true" />
+                Refresh
+              </Button>
+            </div>
+          </div>
+
+          {error ? (
+            <div className={styles.errorBanner}>
+              <Chip tone="negative">API unreachable</Chip>
+              <span>{error}</span>
+            </div>
+          ) : null}
+
+          {loading && !stats ? (
+            <div className={styles.loading}>
+              <Spinner large />
+            </div>
+          ) : (
+            <>
+              {section === 'overview' ? (
+                <Overview
+                  stats={stats}
+                  leads={leads}
+                  onSelectLead={(lead) => navigate('/app/pipeline', { state: { leadId: lead.id } })}
+                />
+              ) : null}
+              {section === 'pipeline' ? (
+                <Pipeline
+                  leads={leads}
+                  stats={stats}
+                  onRefresh={refresh}
+                />
+              ) : null}
+              {section === 'calls' ? <Calls leads={leads} onLogged={() => refresh({ silent: true })} /> : null}
+              {section === 'observability' ? (
+                <Observability observability={observability} stats={stats} />
+              ) : null}
+            </>
+          )}
+        </main>
+
+        <aside className={styles.rightColumn}>
+          <section className={styles.panel}>
+            <div className={styles.panelHead}>
+              <h2 className={styles.panelTitle}>
+                <Radio size={14} aria-hidden="true" />
+                Live pulse
+              </h2>
+              <span className={styles.panelMeta}>{activity.length} events</span>
+            </div>
+            {activity.length === 0 ? (
+              <p className={styles.panelEmpty}>Nothing yet.</p>
+            ) : (
+              <ul className={styles.pulseList}>
+                {activity.map((event, index) => (
+                  <li key={`${event.kind}-${event.at}-${index}`} className={styles.pulseItem}>
+                    <span
+                      className={`${styles.pulseDot} ${styles[`pulseDot--${event.jobStatus ?? event.kind}`]}`}
+                      aria-hidden="true"
+                    />
+                    <div className={styles.pulseBody}>
+                      <p className={styles.pulseTitle}>
+                        {event.kind === 'call' ? 'Call logged' : 'Follow-up job'}
+                      </p>
+                      <p className={styles.pulseDetail}>{event.leadName}</p>
+                      {event.detail ? <p className={styles.pulseNote}>{event.detail}</p> : null}
+                    </div>
+                    <span className={styles.pulseTime}>{timeAgo(event.at)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className={styles.panel}>
+            <div className={styles.panelHead}>
+              <h2 className={styles.panelTitle}>
+                <Activity size={14} aria-hidden="true" />
+                Delivery
+              </h2>
+              <span className={styles.panelMeta}>last 30 days</span>
+            </div>
+            <div className={styles.delivery}>
+              <span className={styles.deliveryValue}>{deliveryRate}%</span>
+              <span className={styles.deliveryLabel}>follow-ups delivered</span>
+            </div>
+            <dl className={styles.miniStats}>
+              <div>
+                <dt>Sent</dt>
+                <dd>{observability?.jobs?.sent ?? 0}</dd>
+              </div>
+              <div>
+                <dt>Failed</dt>
+                <dd>{observability?.jobs?.failed ?? 0}</dd>
+              </div>
+              <div>
+                <dt>Queued</dt>
+                <dd>{observability?.jobs?.queued ?? 0}</dd>
+              </div>
+              <div>
+                <dt>Dead letter</dt>
+                <dd>{observability?.jobs?.deadLetter ?? 0}</dd>
+              </div>
+            </dl>
+          </section>
+
+          <section className={styles.panel}>
+            <div className={styles.panelHead}>
+              <h2 className={styles.panelTitle}>
+                <Inbox size={14} aria-hidden="true" />
+                Webhooks
+              </h2>
+              <span className={styles.panelMeta}>{observability?.webhooks?.total ?? 0} events</span>
+            </div>
+            <ul className={styles.webhookList}>
+              {(observability?.recentWebhooks ?? []).slice(0, 6).map((hook) => (
+                <li key={hook.id}>
+                  <span className={styles.webhookType}>{hook.eventType}</span>
+                  <Chip tone={hook.status === 'delivered' ? 'positive' : 'negative'}>
+                    {hook.statusCode}
+                  </Chip>
+                </li>
+              ))}
+              {(observability?.recentWebhooks ?? []).length === 0 ? (
+                <li className={styles.panelEmpty}>No webhook deliveries yet.</li>
+              ) : null}
+            </ul>
+          </section>
+        </aside>
       </div>
     </div>
   );
-
-  // ─── Docs View ──────────────────────────────────────────────────────────────
-  const renderDocs = () => (
-    <div className={styles.fullView}>
-      <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-bright)', marginBottom: '24px', letterSpacing: '-0.02em' }}>
-        API Specifications
-      </h2>
-      <div className={styles.docsGrid}>
-        <div className={styles.tacticalPanel} style={{ padding: '32px' }}>
-          <div className={styles.panelGlow} />
-          <div className={styles.endpointMethod}>POST /v1/dispatch/calls</div>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-main)', marginBottom: '16px', lineHeight: 1.7 }}>
-            Initialize a new call session and queue it for AI summarization.
-          </p>
-          <pre className={styles.codeSnippet}>
-{`{
-  "caller": "+1-555-0102",
-  "priority": "high",
-  "stream_url": "wss://pulse.io/live"
-}`}
-          </pre>
-        </div>
-        <div className={styles.tacticalPanel} style={{ padding: '32px' }}>
-          <div className={styles.panelGlow} />
-          <h3 style={{ fontSize: '0.85rem', color: 'var(--text-bright)', marginBottom: '16px', fontWeight: 600 }}>
-            Authentication
-          </h3>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-main)', lineHeight: 1.7 }}>
-            All requests must include a Bearer JWT in the <code style={{ color: 'var(--cyan)', fontFamily: 'var(--font-mono)', fontSize: '0.8rem' }}>Authorization</code> header.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-
-  // ─── Render ──────────────────────────────────────────────────────────────────
-  return (
-    <div className={styles.container}>
-      <div className={styles.nebula} />
-      <div className={styles.gridOverlay} />
-
-      {/* Command Dock */}
-      <nav className={styles.commandDock}>
-        <button
-          className={`${styles.navItem} ${activeTab === 'Overview' && !selectedLead ? styles.active : ''}`}
-          onClick={() => { setActiveTab('Overview'); setSelectedLead(null); }}
-          title="Overview"
-        >
-          <LayoutDashboard size={19} />
-        </button>
-        <button
-          className={`${styles.navItem} ${(activeTab === 'Leads' || selectedLead) ? styles.active : ''}`}
-          onClick={() => { setActiveTab('Leads'); setSelectedLead(null); }}
-          title="Leads"
-        >
-          <Users size={19} />
-        </button>
-        <button
-          className={`${styles.navItem} ${activeTab === 'Docs' ? styles.active : ''}`}
-          onClick={() => { setActiveTab('Docs'); setSelectedLead(null); }}
-          title="API Docs"
-        >
-          <BookOpen size={19} />
-        </button>
-        <div className={styles.navDivider} />
-        <button className={styles.navItem} onClick={onBackToLanding} title="Back Home">
-          <Home size={19} color="var(--cyan)" />
-        </button>
-        <button className={styles.navItem} onClick={handleSignOut} title="Sign Out">
-          <LogOut size={19} color="var(--rose)" />
-        </button>
-      </nav>
-
-      {/* Main */}
-      <main className={styles.mainContent}>
-        {/* Header */}
-        <header className={styles.header}>
-          <div className={styles.headerLeft}>
-            <h1>LeadPulse OS // Terminal</h1>
-            <p>NODE:04 — STATUS:SECURE — {selectedLead ? 'LEAD_DETAIL' : activeTab.toUpperCase()}</p>
-          </div>
-          <div className={styles.headerRight}>
-            <div className={styles.liveIndicator}>
-              <span className={`${styles.liveDot} glow-dot`} />
-              Session Active
-            </div>
-            <button className={styles.homeBtn} onClick={onBackToLanding}>
-              <Home size={12} /> Home
-            </button>
-            <div className={styles.userAvatar}>JD</div>
-          </div>
-        </header>
-
-        {/* Content */}
-        {selectedLead ? (
-          <div className={styles.fullView}>
-            <button className={styles.backBtn} onClick={() => setSelectedLead(null)}>
-              <ArrowLeft size={12} /> Back to List
-            </button>
-            <div className={styles.leadDetailGrid}>
-              <div className={styles.tacticalPanel} style={{ padding: '40px' }}>
-                <div className={styles.panelGlow} />
-                <h2 style={{ fontSize: '1.8rem', fontWeight: 700, color: 'var(--text-bright)', marginBottom: '6px', letterSpacing: '-0.04em' }}>
-                  {selectedLead.name}
-                </h2>
-                <p style={{ fontFamily: 'var(--font-mono)', color: 'var(--cyan)', fontSize: '0.72rem', marginBottom: '28px', opacity: 0.8 }}>
-                  {selectedLead.phone} — ENCRYPTED_LINK
-                </p>
-                <div className={styles.aiFullText}>{selectedLead.summary}</div>
-              </div>
-              <div className={styles.tacticalPanel} style={{ padding: '32px' }}>
-                <div className={styles.panelGlow} />
-                <h3 style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--text-dim)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '20px' }}>
-                  Actions
-                </h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <button className={styles.actionBtn}>Commit Conversion</button>
-                  <button className={styles.actionBtnSecondary}>Schedule Follow-up</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <>
-            {activeTab === 'Overview' && renderOverview()}
-            {activeTab === 'Leads' && renderLeads()}
-            {activeTab === 'Docs' && renderDocs()}
-          </>
-        )}
-      </main>
-    </div>
-  );
-};
-
-export default Dashboard;
+}
