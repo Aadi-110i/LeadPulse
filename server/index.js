@@ -1,45 +1,85 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import helmet from 'helmet';
 import compression from 'compression';
-import { errorHandler } from './src/middleware/error-handler.js';
-import authRoutes from './src/routes/auth.routes.js';
+import rateLimit from 'express-rate-limit';
 
-dotenv.config();
+import env from './src/config/env.js';
+import { isDatabaseReady } from './src/db/pool.js';
+import { runMigrations } from './src/db/migrate.js';
+import { createQueue, setActiveQueue } from './src/services/queue/index.js';
+import { errorHandler } from './src/middleware/error-handler.js';
+
+import authRoutes from './src/routes/auth.routes.js';
+import leadsRoutes from './src/routes/leads.routes.js';
+import callsRoutes from './src/routes/calls.routes.js';
+import statsRoutes from './src/routes/stats.routes.js';
+import webhooksRoutes from './src/routes/webhooks.routes.js';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-// Security & Optimization
-app.use(helmet());
+app.set('trust proxy', 1);
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors());
 app.use(compression());
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
 
-// Routes
+app.use(
+  '/api/auth',
+  rateLimit({ windowMs: 60_000, limit: 60, standardHeaders: 'draft-7', legacyHeaders: false })
+);
+
+let queue = null;
+
 app.use('/api/auth', authRoutes);
+app.use('/api/leads', leadsRoutes);
+app.use('/api/calls', callsRoutes);
+app.use('/api/stats', statsRoutes);
+app.use('/api/webhooks', webhooksRoutes);
 
-// Health Check
-app.get('/health', (req, res) => {
-  res.json({ status: 'healthy', timestamp: new Date().toISOString() });
+app.get('/api/health', async (req, res) => {
+  const database = await isDatabaseReady();
+  let queueState = { driver: 'uninitialised', pending: 0 };
+  try {
+    queueState = await queue.stats();
+  } catch {
+    /* queue not ready — reported as such */
+  }
+
+  const ok = database;
+  res.status(ok ? 200 : 503).json({
+    status: ok ? 'healthy' : 'degraded',
+    services: {
+      database: database ? 'up' : 'down',
+      queue: queueState.driver,
+    },
+    queue: queueState,
+    timestamp: new Date().toISOString(),
+  });
 });
 
-// Mock Routes Placeholder
-app.get('/api/leads', (req, res) => {
-  res.json([
-    { id: 1, name: "Rahul Sharma", status: "contacted", sentiment: "positive" }
-  ]);
-});
-
-app.post('/api/calls', (req, res) => {
-  console.log('Logging call:', req.body);
-  res.status(202).json({ message: 'Call queued for AI summarization', job_id: 'job_492' });
-});
-
-// Error Handling
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-  console.log(`🚀 LeadPulse Backend running on http://localhost:${PORT}`);
-});
+async function boot() {
+  try {
+    await runMigrations();
+  } catch (err) {
+    console.error('[boot] migrations failed:', err.message);
+    console.error('[boot] the API will start in degraded mode');
+  }
+
+  try {
+    queue = await createQueue();
+    setActiveQueue(queue);
+  } catch (err) {
+    console.error('[boot] queue failed to start:', err.message);
+  }
+
+  app.listen(env.port, () => {
+    console.log(`LeadPulse API listening on http://localhost:${env.port}`);
+  });
+}
+
+boot();
+
+export default app;
