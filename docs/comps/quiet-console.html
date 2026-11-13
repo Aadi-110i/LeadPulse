@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en" data-direction="quiet-console">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LeadPulse — Quiet Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./quiet-console.css" />
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <a class="brand" href="#">
+        <span class="brand-mark" aria-hidden="true"><span></span></span>
+        <span class="brand-name">Lead<em>Pulse</em></span>
+      </a>
+      <nav class="topnav">
+        <a href="#">Product</a>
+        <a href="#">API</a>
+        <a href="#">Pricing</a>
+        <a href="#">Docs</a>
+      </nav>
+      <div class="topbar-actions">
+        <a class="link-quiet" href="#">Sign in</a>
+        <a class="btn btn-primary" href="#">Start free</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="status-line">
+            <span class="status-dot" aria-hidden="true"></span>
+            Queue healthy &middot; 98.2% delivery rate
+          </p>
+          <h1>Never lose a<br />follow-up again.</h1>
+          <p class="lede">
+            Log every call. LeadPulse transcribes it, reads the intent, and sends the
+            WhatsApp follow-up within minutes of hangup &mdash; while the lead is still warm.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary btn-lg" href="#">Start free</a>
+            <a class="btn btn-quiet btn-lg" href="#">Read the API docs</a>
+          </div>
+          <dl class="proof">
+            <div><dt>Leads tracked</dt><dd>1,240</dd></div>
+            <div><dt>Calls today</dt><dd>84</dd></div>
+            <div><dt>Avg latency</dt><dd>342<span>ms</span></dd></div>
+          </dl>
+        </div>
+
+        <div class="hero-panel" aria-label="Live call record">
+          <div class="panel-head">
+            <span class="panel-title">Call record</span>
+            <span class="chip chip-live">Analysed</span>
+          </div>
+
+          <div class="record">
+            <div class="record-row">
+              <span class="micro">Lead</span>
+              <span class="value">lead_204 &middot; Rahul Sharma</span>
+            </div>
+            <div class="record-row">
+              <span class="micro">Duration</span>
+              <span class="value">3m 02s</span>
+            </div>
+            <div class="record-row">
+              <span class="micro">Outcome</span>
+              <span class="value">Interested</span>
+            </div>
+          </div>
+
+          <div class="sentiment">
+            <div class="sentiment-head">
+              <span class="micro">Sentiment</span>
+              <span class="sentiment-value">Positive</span>
+            </div>
+            <div class="meter" role="img" aria-label="Sentiment score 0.87 positive">
+              <span class="meter-fill meter-fill--87"></span>
+            </div>
+          </div>
+
+          <div class="summary">
+            <span class="micro">AI summary</span>
+            <p>
+              Customer is evaluating the Pro plan. Main concern is pricing.
+              Suggested a follow-up demo on Friday.
+            </p>
+          </div>
+
+          <div class="followup">
+            <span class="chip chip-sent">Follow-up sent</span>
+            <span class="micro">2m 41s after hangup</span>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

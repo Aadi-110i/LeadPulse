@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en" data-direction="nightshift">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LeadPulse — Nightshift</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./nightshift.css" />
+</head>
+<body>
+  <div class="shell">
+
+    <header class="topbar">
+      <a class="brand" href="#">
+        <span class="brand-mark" aria-hidden="true"><span></span></span>
+        <span class="brand-name">Lead<em>Pulse</em></span>
+      </a>
+      <nav class="topnav">
+        <a href="#">Product</a>
+        <a href="#">API</a>
+        <a href="#">Pricing</a>
+        <a href="#">Docs</a>
+      </nav>
+      <div class="topbar-actions">
+        <a class="link-quiet" href="#">Sign in</a>
+        <a class="btn btn-primary" href="#">Start free</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <h1>Never lose a<br />follow-up again.</h1>
+        <p class="lede">
+          Log every call. LeadPulse transcribes it, reads the intent, and sends the
+          WhatsApp follow-up within minutes of hangup &mdash; while the lead is still warm.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary btn-lg" href="#">Start free</a>
+          <a class="btn btn-outline btn-lg" href="#">Read the API docs</a>
+        </div>
+      </section>
+
+      <section class="route" aria-label="How LeadPulse moves a lead">
+        <ol class="route-line">
+          <li class="stop stop-done">
+            <span class="stop-dot" aria-hidden="true"></span>
+            <span class="stop-label">Call logged</span>
+            <span class="stop-detail">POST /v1/calls</span>
+          </li>
+          <li class="stop stop-done">
+            <span class="stop-dot" aria-hidden="true"></span>
+            <span class="stop-label">AI summary</span>
+            <span class="stop-detail">sentiment + next step</span>
+          </li>
+          <li class="stop stop-live">
+            <span class="stop-dot" aria-hidden="true"></span>
+            <span class="stop-label">Follow-up queued</span>
+            <span class="stop-detail">Redis &middot; 2m 41s</span>
+          </li>
+          <li class="stop">
+            <span class="stop-dot" aria-hidden="true"></span>
+            <span class="stop-label">Converted</span>
+            <span class="stop-detail">lead &rarr; converted</span>
+          </li>
+        </ol>
+
+        <div class="route-stats">
+          <div><dt>Leads tracked</dt><dd>1,240</dd></div>
+          <div><dt>Calls today</dt><dd>84</dd></div>
+          <div><dt>Delivery rate</dt><dd>98.2<span>%</span></dd></div>
+          <div><dt>Avg latency</dt><dd>342<span>ms</span></dd></div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

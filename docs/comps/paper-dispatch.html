@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en" data-direction="paper-dispatch">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LeadPulse — Paper Dispatch</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./paper-dispatch.css" />
+</head>
+<body>
+  <div class="page">
+
+    <aside class="rail">
+      <a class="brand" href="#">
+        <span class="brand-mark" aria-hidden="true"><span></span></span>
+        <span class="brand-name">Lead<em>Pulse</em></span>
+      </a>
+
+      <nav class="railnav">
+        <a href="#">Product</a>
+        <a href="#">API</a>
+        <a href="#">Pricing</a>
+        <a href="#">Docs</a>
+      </nav>
+
+      <div class="rail-foot">
+        <dl class="rail-stat">
+          <dt>Calls today</dt>
+          <dd>84</dd>
+        </dl>
+        <dl class="rail-stat">
+          <dt>Delivery rate</dt>
+          <dd>98.2<span>%</span></dd>
+        </dl>
+        <a class="link-quiet" href="#">Sign in</a>
+      </div>
+    </aside>
+
+    <main class="sheet">
+      <section class="hero">
+        <div class="hero-head">
+          <h1>Never lose a<br />follow-up again.</h1>
+          <p class="lede">
+            Log every call. LeadPulse transcribes it, reads the intent, and sends the
+            WhatsApp follow-up within minutes of hangup &mdash; while the lead is still warm.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary btn-lg" href="#">Start free</a>
+            <a class="btn btn-outline btn-lg" href="#">Read the API docs</a>
+          </div>
+        </div>
+
+        <div class="ledger">
+          <div class="ledger-head">
+            <span class="ledger-title">Dispatch log</span>
+            <span class="ledger-date">Today</span>
+          </div>
+
+          <table class="ledger-table">
+            <thead>
+              <tr>
+                <th scope="col">Lead</th>
+                <th scope="col">Outcome</th>
+                <th scope="col">Sentiment</th>
+                <th scope="col">Follow-up</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="lead-name">Rahul Sharma</span><span class="lead-id">lead_204</span></td>
+                <td>Interested</td>
+                <td><span class="sent sent-pos">Positive</span></td>
+                <td><span class="stamp stamp-sent">Sent</span></td>
+              </tr>
+              <tr>
+                <td><span class="lead-name">Sarah Chen</span><span class="lead-id">lead_311</span></td>
+                <td>Enterprise</td>
+                <td><span class="sent sent-neutral">Neutral</span></td>
+                <td><span class="stamp stamp-queued">Queued</span></td>
+              </tr>
+              <tr>
+                <td><span class="lead-name">Mike Johnson</span><span class="lead-id">lead_089</span></td>
+                <td>Callback</td>
+                <td><span class="sent sent-pos">Positive</span></td>
+                <td><span class="stamp stamp-sent">Sent</span></td>
+              </tr>
+              <tr>
+                <td><span class="lead-name">Priya Nair</span><span class="lead-id">lead_455</span></td>
+                <td>Not interested</td>
+                <td><span class="sent sent-neg">Negative</span></td>
+                <td><span class="stamp stamp-none">Held</span></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="ledger-foot">
+            <span>1,240 leads tracked</span>
+            <span>342 ms average latency</span>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
