@@ -34,11 +34,11 @@ Most SMBs lose leads because they forget to follow up. LeadPulse fixes this by:
 
 ## 🏗️ System Architecture
                 ┌─────────────────────────────────────┐
-                │           Client / CRM System        │
+                │           Client / CRM System       │
                 └──────────────┬──────────────────────┘
                                │ REST API calls
                 ┌──────────────▼──────────────────────┐
-                │         Express.js API Server         │
+                │         Express.js API Server        │
                 │  /api/calls  /api/leads  /api/logs   │
                 └───┬──────────────────┬───────────────┘
                     │                  │
@@ -49,9 +49,9 @@ Most SMBs lose leads because they forget to follow up. LeadPulse fixes this by:
        └────────────────┘     └────────┬──────────┘
                                        │
                 ┌──────────────────────▼──────────────┐
-                │         Worker Service                │
-                │  Calls OpenAI → Summarizes call      │
-                │  Triggers Twilio WhatsApp webhook    │
+                │         Worker Service              │
+                │  Calls OpenAI → Summarizes call     │
+                │  Triggers Twilio WhatsApp webhook   │
                 └─────────────────────────────────────┘
 
 ---
