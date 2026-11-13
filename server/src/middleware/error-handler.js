@@ -1,6 +1,6 @@
 import { AppError, ValidationError } from '../utils/errors.js';
 
-export const errorHandler = (err, req, res, next) => {
+export const errorHandler = (err, req, res, _next) => {
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({
       status: 'error',

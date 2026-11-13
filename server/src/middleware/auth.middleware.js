@@ -13,7 +13,7 @@ export const authenticate = (req, res, next) => {
     
     req.user = decoded;
     next();
-  } catch (error) {
+  } catch {
     next(new UnauthorizedError('Invalid or expired token'));
   }
 };

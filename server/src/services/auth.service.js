@@ -1,46 +1,65 @@
 import jwt from 'jsonwebtoken';
-import { UserModel } from '../models/user.model.js';
-import { UnauthorizedError, ConflictError, ValidationError } from '../utils/errors.js';
 import bcrypt from 'bcryptjs';
+import env from '../config/env.js';
+import { UsersRepository } from '../repositories/users.repository.js';
+import { UnauthorizedError, ConflictError } from '../utils/errors.js';
 
 export class AuthService {
   static async register({ email, password, name }) {
-    const existingUser = await UserModel.findByEmail(email);
-    if (existingUser) {
-      throw new ConflictError('Email already registered');
+    const existing = await UsersRepository.findByEmail(email);
+    if (existing) {
+      throw new ConflictError('This account already exists.');
     }
 
-    const user = await UserModel.create({ email, password, name });
-    const token = this.generateToken(user);
+    const passwordHash = await bcrypt.hash(password, 10);
+    const user = await UsersRepository.create({ email, passwordHash, name });
 
-    return { user: this.sanitizeUser(user), token };
+    return { user: AuthService.sanitizeUser(user), token: AuthService.generateToken(user) };
   }
 
   static async login({ email, password }) {
-    const user = await UserModel.findByEmail(email);
+    const user = await UsersRepository.findByEmail(email);
     if (!user) {
-      throw new UnauthorizedError('Invalid email or password');
+      throw new UnauthorizedError('Invalid email or access key.');
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      throw new UnauthorizedError('Invalid email or password');
+    const isValid = await bcrypt.compare(password, user.passwordHash);
+    if (!isValid) {
+      throw new UnauthorizedError('Invalid email or access key.');
     }
 
-    const token = this.generateToken(user);
-    return { user: this.sanitizeUser(user), token };
+    return { user: AuthService.sanitizeUser(user), token: AuthService.generateToken(user) };
+  }
+
+  static async findById(id) {
+    const user = await UsersRepository.findById(id);
+    return user ? AuthService.sanitizeUser(user) : null;
   }
 
   static generateToken(user) {
-    return jwt.sign(
-      { id: user.id, email: user.email },
-      process.env.JWT_SECRET || 'super-secret-nebula-key',
-      { expiresIn: '7d' }
-    );
+    return jwt.sign({ id: user.id, email: user.email, role: user.role }, env.jwtSecret, {
+      expiresIn: env.jwtExpiresIn,
+    });
+  }
+
+  /** Seconds until the token expires — the UI renders this as "Session Active". */
+  static sessionTtl() {
+    const match = /^(\d+)([smhd])$/.exec(env.jwtExpiresIn);
+    if (!match) return 604800;
+    const value = Number(match[1]);
+    const unit = { s: 1, m: 60, h: 3600, d: 86400 }[match[2]];
+    return value * unit;
   }
 
   static sanitizeUser(user) {
-    const { password, ...sanitized } = user;
-    return sanitized;
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      createdAt: user.createdAt,
+    };
   }
 }
+
+export default AuthService;
