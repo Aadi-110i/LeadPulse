@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { ArrowRight, Globe, Mail, Send } from 'lucide-react';
 import styles from '../Landing.module.css';
 
 const COLUMNS = [
@@ -27,6 +28,14 @@ const COLUMNS = [
       { label: 'Create account', to: '/signup' },
     ],
   },
+  {
+    title: 'Company',
+    links: [
+      { label: 'Customers', href: '#customers' },
+      { label: 'Integrations', href: '#integrations' },
+      { label: 'FAQ', href: '#faq' },
+    ],
+  },
 ];
 
 export default function SiteFooter() {
@@ -45,6 +54,28 @@ export default function SiteFooter() {
           <p className={styles.footerTagline}>
             The call lifecycle, from hangup to follow-up, on one API.
           </p>
+
+          <form
+            className={styles.newsletter}
+            onSubmit={(event) => event.preventDefault()}
+            aria-label="Subscribe to release notes"
+          >
+            <label className="visually-hidden" htmlFor="footer-email">
+              Email address
+            </label>
+            <input
+              id="footer-email"
+              type="email"
+              name="email"
+              className={styles.newsletterInput}
+              placeholder="you@company.com"
+              autoComplete="email"
+            />
+            <button type="submit" className={styles.newsletterButton} aria-label="Subscribe">
+              <Send size={15} aria-hidden="true" />
+            </button>
+          </form>
+
           <p className={styles.footerStatus}>
             <span className={styles.statusDot} aria-hidden="true" />
             All systems operational
@@ -77,9 +108,26 @@ export default function SiteFooter() {
 
       <div className={styles.footerBottom}>
         <p>© {new Date().getFullYear()} LeadPulse. A recreation of the open-source project.</p>
-        <p className={styles.footerBottomNote}>
-          Figures on this page are illustrative. Dashboard numbers come from the live database.
-        </p>
+
+        <div className={styles.footerBottomMeta}>
+          <span className={styles.footerBottomNote}>
+            Figures on this page are illustrative. Dashboard numbers come from the live database.
+          </span>
+          <span className={styles.footerSocial}>
+            <a href="https://github.com/Aadi-110i/LeadPulse" className={styles.footerSocialLink}>
+              <Globe size={15} aria-hidden="true" />
+              <span className="visually-hidden">Repository</span>
+            </a>
+            <a href="mailto:hello@leadpulse.dev" className={styles.footerSocialLink}>
+              <Mail size={15} aria-hidden="true" />
+              <span className="visually-hidden">Email us</span>
+            </a>
+            <Link to="/docs" className={styles.footerSocialLink}>
+              <ArrowRight size={15} aria-hidden="true" />
+              <span className="visually-hidden">Documentation</span>
+            </Link>
+          </span>
+        </div>
       </div>
     </footer>
   );
