@@ -77,17 +77,18 @@ swapping in a real provider is a single file change. See
 The product deliberately changes register between its public and private halves, while
 sharing one vocabulary of tokens, type, and spacing.
 
-**Paper Dispatch** — the marketing site and API reference. A cool-white dispatch sheet,
-hairline rules doing the structural work, cobalt as the only accent, set in Familjen
-Grotesk. It reads like a printed spec sheet.
+**Cinematic** — the marketing site and API reference. Graphite black with photography
+carrying the depth, platinum as the only bright value and a single warm signal tone for
+live state. Hairline rules do the structural work, type is set in Outfit for display and
+DM Sans for prose. It reads like a film still rather than a page.
 
 **Quiet Console** — the dashboard and the sign-in flow. A graphite instrument panel,
-brass as the single accent, Schibsted Grotesk for prose and JetBrains Mono only where
-real data lives. It reads like a machine you operate rather than a page you read.
+brass as the single accent, Outfit for display and JetBrains Mono only where real data
+lives. It reads like a machine you operate rather than a page you read.
 
 ```
-[data-surface="marketing"]   Paper Dispatch  — landing, docs
-[data-surface="app"]         Quiet Console   — dashboard, auth
+[data-surface="marketing"]   Cinematic      — landing, docs
+[data-surface="app"]         Quiet Console  — dashboard, auth
 ```
 
 Both are defined in `src/styles/tokens.css`. Nothing else in the codebase declares a
@@ -233,8 +234,6 @@ docs/
 ```
 
 
-<<<<<<< HEAD
-=======
 ## API reference
 
 All endpoints return `{ status, data }` on success and `{ status, error, message }` on
@@ -277,7 +276,6 @@ The interactive version of this lives in the app at `/docs`, where every endpoin
 runner that fires a real request and renders the real response.
 
 ---
->>>>>>> 19e99cf (docs: add product documentation)
 
 ## Data model
 
@@ -367,11 +365,18 @@ Beyond that:
   for prose.
 - **One elevation.** A component uses a border *or* a shadow, never both, and shadows
   are offset rather than a diffuse glow.
-- **No decorative overlays.** No gradient text, no glass or blur panels, no glow behind
-  type, no floating ornament above the content.
+- **No decorative overlays in the console.** The app surface has no gradient text, no
+  glow behind type, and no floating ornament above the content. The marketing surface
+  is the one deliberate exception: it uses photography, hairline-bordered glass panels
+  and a faint film grain to set a register, and nothing else is decorative.
 - **Readability.** Body copy is capped at a 68-character measure. Display tracking
   tightens to `-0.035em`. Micro-labels are mono, 11px, uppercase, `0.06em` tracking.
 - **Reduced motion** is honoured globally.
+
+The marketing surface sets its own motion: a staggered entrance on the hero, a
+scroll-linked reveal on each section, and a film grain layer that sits behind the
+content. All of it is driven by `data-anim` hooks in `src/styles/animations.css`, so the
+rules keep working when a component uses CSS Modules.
 
 The dashboard keeps its original three-column command centre: a left rail of endpoints
 and queue state, the main workspace, and a right column carrying the live pulse,
