@@ -1,0 +1,135 @@
+/* ============================================================================
+   LeadPulse - entrance motion and atmosphere
+   ----------------------------------------------------------------------------
+   Targets data-anim hooks rather than class names, so the rules keep working
+   when a component uses CSS modules.
+   ========================================================================== */
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@keyframes brand-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 10px rgba(217, 119, 63, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(217, 119, 63, 0.35);
+  }
+}
+
+/* --- Hero sequence -------------------------------------------------------- */
+[data-anim='fade'] {
+  animation: fade-in 0.6s var(--ease-out) both;
+}
+
+[data-anim='rise'] {
+  animation: rise-in 0.75s var(--ease-out) both;
+}
+
+[data-anim='panel'] {
+  animation: panel-in 0.85s var(--ease-out) both;
+}
+
+[data-anim-delay='1'] {
+  animation-delay: 80ms;
+}
+
+[data-anim-delay='2'] {
+  animation-delay: 160ms;
+}
+
+[data-anim-delay='3'] {
+  animation-delay: 240ms;
+}
+
+[data-anim-delay='4'] {
+  animation-delay: 320ms;
+}
+
+/* --- Live indicators ------------------------------------------------------ */
+[data-surface='marketing'] .statusDot,
+[data-surface='marketing'] [class*='heroEyebrowDot'] {
+  animation: brand-pulse 3.2s ease-in-out infinite;
+}
+
+/* --- Film grain ----------------------------------------------------------- */
+[data-surface='marketing']::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+  opacity: 0.02;
+}
+
+/* --- Scroll reveals ------------------------------------------------------- */
+@supports (animation-timeline: view()) {
+  [data-reveal],
+  [data-surface='marketing'] main > div > section {
+    animation: rise-in linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 22%;
+  }
+}
+
+/* --- Focus rings ---------------------------------------------------------- */
+[data-surface='marketing'] a:focus-visible,
+[data-surface='marketing'] button:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+/* --- Reduced motion ------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  [data-anim],
+  [data-reveal] {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  [data-surface='marketing']::after {
+    display: none;
+  }
+}
