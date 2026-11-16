@@ -28,17 +28,32 @@ export default function Auth({ mode = 'signin' }) {
   async function handleSubmit(event) {
     event.preventDefault();
     setError('');
+
+    // Client-side validation
+    if (!email.trim()) {
+      setError('Please enter your email address.');
+      return;
+    }
+    if (!password) {
+      setError('Please enter your password.');
+      return;
+    }
+    if (isSignup && password.length < 6) {
+      setError('Password must be at least 6 characters.');
+      return;
+    }
+
     setBusy(true);
 
     try {
       if (isSignup) {
-        await signUp({ email, password, name: name.trim() || undefined });
+        await signUp({ email: email.trim(), password, name: name.trim() || undefined });
       } else {
-        await signIn({ email, password });
+        await signIn({ email: email.trim(), password });
       }
       navigate(destination, { replace: true });
     } catch (err) {
-      setError(err.message ?? 'Something went wrong. Try again.');
+      setError(err.message ?? 'Something went wrong. Please try again.');
     } finally {
       setBusy(false);
     }
@@ -51,7 +66,7 @@ export default function Auth({ mode = 'signin' }) {
       await signIn({ email: 'demo@leadpulse.dev', password: 'demo1234' });
       navigate('/app', { replace: true });
     } catch (err) {
-      setError(err.message ?? 'The demo account is unavailable.');
+      setError(err.message ?? 'The demo account is unavailable. Make sure the server is running.');
     } finally {
       setBusy(false);
     }
@@ -66,6 +81,16 @@ export default function Auth({ mode = 'signin' }) {
         </Link>
 
         <div className={styles.formWrap}>
+          {/* Brand in auth */}
+          <Link to="/" className={styles.authBrand}>
+            <span className={styles.authBrandMark} aria-hidden="true">
+              <span />
+            </span>
+            <span className={styles.authBrandName}>
+              Lead<em>Pulse</em>
+            </span>
+          </Link>
+
           <h1 className={styles.title}>
             {isSignup ? 'Create your workspace' : 'Welcome back'}
           </h1>
@@ -85,6 +110,7 @@ export default function Auth({ mode = 'signin' }) {
                   placeholder="Alex Moreau"
                   value={name}
                   onChange={(event) => setName(event.target.value)}
+                  disabled={busy}
                 />
               </Field>
             ) : null}
@@ -99,11 +125,13 @@ export default function Auth({ mode = 'signin' }) {
                 placeholder="you@company.com"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
+                disabled={busy}
+                invalid={!!error && !email.trim()}
               />
             </Field>
 
             <Field
-              label="Access key"
+              label="Password"
               htmlFor="password"
               hint={isSignup ? 'At least 6 characters.' : undefined}
             >
@@ -117,12 +145,20 @@ export default function Auth({ mode = 'signin' }) {
                 placeholder="••••••••"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
+                disabled={busy}
+                invalid={!!error && !password}
               />
             </Field>
 
             {error ? <Note tone="negative">{error}</Note> : null}
 
-            <Button type="submit" variant="primary" size="lg" full disabled={busy}>
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
+              full
+              disabled={busy}
+            >
               {busy ? 'Working…' : isSignup ? 'Create account' : 'Sign in'}
             </Button>
           </form>
@@ -132,7 +168,13 @@ export default function Auth({ mode = 'signin' }) {
               <div className={styles.divider}>
                 <span>or</span>
               </div>
-              <Button variant="secondary" size="lg" full onClick={useDemoAccount} disabled={busy}>
+              <Button
+                variant="secondary"
+                size="lg"
+                full
+                onClick={useDemoAccount}
+                disabled={busy}
+              >
                 Use the demo account
               </Button>
               <p className={styles.demoHint}>
@@ -152,7 +194,7 @@ export default function Auth({ mode = 'signin' }) {
 
       <aside className={styles.aside}>
         <div className={styles.asideInner}>
-          <p className="micro">Why LeadPulse</p>
+          <p className={styles.asideHeading}>Why LeadPulse</p>
           <ul className={styles.promises}>
             {PROMISES.map((promise) => (
               <li key={promise}>
