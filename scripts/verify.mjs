@@ -99,12 +99,23 @@ async function main() {
   await sleep(400);
 
   const h1 = await textOf(page, 'h1');
-  check('landing renders the hero headline', h1?.includes('Never lose a follow-up'), h1 ?? '');
+  check('landing renders the hero headline', h1?.includes('never go cold'), h1 ?? '');
 
   const sectionIds = await page.$$eval('section[id]', (els) => els.map((e) => e.id));
   check(
     'landing renders every section',
-    ['how-it-works', 'features', 'api', 'pricing', 'docs'].every((id) => sectionIds.includes(id)),
+    [
+      'pillars',
+      'showcase',
+      'how-it-works',
+      'features',
+      'api',
+      'customers',
+      'integrations',
+      'pricing',
+      'docs',
+      'faq',
+    ].every((id) => sectionIds.includes(id)),
     sectionIds.join(',')
   );
 
@@ -118,16 +129,32 @@ async function main() {
   const after = await textOf(page, '[class*="pricingGrid"] article:nth-child(1) span[class*="planAmount"]');
   check('pricing toggle changes the price', before !== after && Boolean(after), `${before} -> ${after}`);
 
-  // API tabs
-  const firstTab = await textOf(page, '[role="tab"]');
-  await page.click('[role="tab"]:nth-of-type(3)');
+  // Showcase tabs
+  const showcaseBefore = await textOf(page, '[class*="showcaseCopy"] h3');
+  await page.click('#showcase [role="tab"]:nth-of-type(2)');
   await sleep(250);
-  const thirdTab = await textOf(page, '[role="tab"][aria-selected="true"]');
+  const showcaseAfter = await textOf(page, '[class*="showcaseCopy"] h3');
+  check('showcase tabs switch the panel copy', showcaseBefore !== showcaseAfter, `${showcaseBefore} -> ${showcaseAfter}`);
+
+  // API tabs
+  const firstTab = await textOf(page, '[class*="apiPanel"] [role="tab"]');
+  await page.click('[class*="apiPanel"] [role="tab"]:nth-of-type(3)');
+  await sleep(250);
+  const thirdTab = await textOf(page, '[class*="apiPanel"] [role="tab"][aria-selected="true"]');
   check('API tabs switch the visible endpoint', firstTab !== thirdTab, `${firstTab} -> ${thirdTab}`);
+
+  // FAQ accordion
+  const faqOpen = await count(page, '[class*="faqAnswer"]:not([hidden])');
+  await page.click('[class*="faqQuestion"]:nth-of-type(3)');
+  await sleep(250);
+  const faqOpenAfter = await count(page, '[class*="faqAnswer"]:not([hidden])');
+  check('FAQ accordion opens an answer', faqOpenAfter >= 1, `${faqOpen} -> ${faqOpenAfter}`);
 
   // Copy button
   const copyCount = await count(page, 'button[class*="copy"]');
   check('landing exposes copy buttons', copyCount > 0, `${copyCount} found`);
+
+  await shot(page, '01b-landing-sections');
 
   // ------------------------------------------------------------------- docs
   await page.goto(`${BASE}/docs`, { waitUntil: 'networkidle2' });
